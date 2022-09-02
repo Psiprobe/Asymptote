@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+    <link rel="stylesheet" type="text/css" href="prj.css">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site A</title>
+    <script type="module">
+        import init from "./pkg/prj.js";
+    </script>
+</head>
+<audio id = "audio1">
+	<source src="src/audio/level_up.ogg"></source>
+</audio>  
+<audio id ="audio2">
+    <source src="src/audio/mixkit-interface-device-click-2577.wav"></source>
+</audio>
+
+<script type="module">
+    import init from "./pkg/prj.js";
+    window.init = function render(){
+        init().then(() => {
+        console.log("WASM Loaded");
+    });
+
+    };
+</script>
+<script>
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    function function_name(){
+        const Node = document.getElementById("window");
+        Node.textContent = '';
+        window.init();
+        window.onload = function() {
+    window.document.body.onkeydown = function() {
+        if (event.ctrlKey) {
+            event.stopPropagation();
+            event.preventDefault();
+            try {
+                event.keyCode = 0;
+            }
+            catch (event) {
+
+            }
+            return false;
+        }
+        return true;
+        }
+    }
+    }
+    function PlaySound(soundobj) {
+    var thissound=document.getElementById(soundobj);
+    thissound.play();
+}
+
+    function StopSound(soundobj) {
+    var thissound=document.getElementById(soundobj);
+    thissound.pause();
+    thissound.currentTime = 0;
+}
+    
+</script>
+<body>
+    
+    
+    <p><button onclick="function_name(),PlaySound('audio2')" class = "button button1">-- Initiate Graphic Interface --</button></p>
+    <p><button onclick="PlaySound('audio2')" class = "button button1">-- Log --</button></p>
+    <p><button onclick="PlaySound('audio2')" class = "button button1">-- Configure --</button></p>
+    <p><button onclick="PlaySound('audio2')" class = "button button1">-- Quit --</button></p>
+    <div id="window">
+    </div>
+    
+</body>
+
+</html>

@@ -1,22 +1,22 @@
 [package]
-name = "proj"
+name = "prj"
 version = "0.1.0"
 edition = "2021"
-author = "sycamore"
+author = "Psiprobe"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [[bin]]
-name = "proj"
+name = "Asymptote"
 path = "src/main.rs"
 
 [dependencies]
 cfg-if = "1"
-winit = "0.26"
 env_logger = "0.9"
 log = "0.4"
-wgpu = "0.12"
+iced_winit = { path = "./src/iced-master/winit" }
+iced_wgpu = { path = "./src/iced-master/wgpu", features = ["webgl"]}
 pollster = "0.2"
 cgmath = "0.18"
 bytemuck = { version = "1.4", features = [ "derive" ] }
@@ -24,11 +24,6 @@ bytemuck = { version = "1.4", features = [ "derive" ] }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1.6"
 console_log = "0.2.0"
-wgpu = { version = "0.12", features = ["webgl"]}
 wasm-bindgen = "0.2.76"
 wasm-bindgen-futures = "0.4"
-web-sys = { version = "0.3.53", features = [
-    "Document",
-    "Window",
-    "Element",
-]}
+web-sys = { version = "0.3", features = ["Element", "HtmlCanvasElement", "Window", "Document"] }
