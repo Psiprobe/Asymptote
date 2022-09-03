@@ -9,7 +9,7 @@ use std::iter;
 use iced_wgpu::{wgpu, Backend, Renderer, Settings, Viewport};
 use iced_winit::{
     conversion, futures, program, renderer, winit, Clipboard, Color, Debug,
-    Size,
+    Size, time::Instant,
 };
 use iced_wgpu::wgpu::util::DeviceExt;
 
@@ -223,6 +223,9 @@ struct State {
 
     renderer: Renderer,
 
+    cli_status: bool,
+    cli_flag: bool,
+
 }
 impl State {
     async fn new(window: &Window) -> Self {
@@ -240,7 +243,8 @@ impl State {
         );
 
         let cursor_position = PhysicalPosition::new(-1.0, -1.0);
-
+        let cli_status = false;
+        let cli_flag = false;
         #[cfg(target_arch = "wasm32")]
         let default_backend = wgpu::Backends::GL;
         #[cfg(not(target_arch = "wasm32"))]
@@ -317,8 +321,7 @@ impl State {
             zfar: 10000.0,
         };
 
-        let camera_controller = camera::CameraController::new(0.2,0.002);
-
+        let camera_controller = camera::CameraController::new(120.0,0.002);
         let mut camera_uniform = camera::CameraUniform::new();
         camera_uniform.update_view_proj(&camera);
 
@@ -738,7 +741,11 @@ impl State {
 
             renderer,
 
+            cli_status,
+            cli_flag,
+
         }
+
     }
 
     pub fn cursormoved(&mut self,new_pos:winit::dpi::PhysicalPosition<f64>){
@@ -758,12 +765,20 @@ impl State {
     }
 
     fn input(&mut self, event: &WindowEvent) -> bool {
-        self.camera_controller.process_events(event)
+        self.camera_controller.process_events(event);
+        if self.camera_controller.is_slash_pressed && !self.cli_flag{
+            self.cli_flag = !self.cli_flag;
+            self.cli_status = !self.cli_status;
+        }
+        if self.camera_controller.is_slash_released{
+            self.cli_flag = false;
+        }
+        true
     }
 
-    fn update(&mut self) {
+    fn update(&mut self, dt: std::time::Duration) {
 
-        self.camera_controller.update_camera(&mut self.camera);
+        self.camera_controller.update_camera(&mut self.camera, dt);
         
         self.uniform.update((960.0 - self.cursor_position.x as f32)/960.0 * self.view_sensitivity , ( self.cursor_position.y as f32 - 540.0 )/540.0 * self.view_sensitivity);
         //texture offset disabled
@@ -874,18 +889,19 @@ impl State {
             render_pass.draw(0..6, 0..1);
             
         }
-
-        self.renderer.with_primitives(|backend, primitive| {
-            backend.present(
-                &self.device,
-                &mut self.staging_belt,
-                &mut surface_encoder,
-                &view,
-                primitive,
-                &self.viewport,
-                &self.debug.overlay(),
-            );
-        });
+        if self.cli_status{
+            self.renderer.with_primitives(|backend, primitive| {
+                backend.present(
+                    &self.device,
+                    &mut self.staging_belt,
+                    &mut surface_encoder,
+                    &view,
+                    primitive,
+                    &self.viewport,
+                    &self.debug.overlay(),
+                );
+            });
+        }
 
         self.staging_belt.finish();
         self.queue.submit(iter::once(texture_encoder.finish()));
@@ -966,13 +982,13 @@ pub async fn run() {
         controls,
         state.viewport.logical_size(),
         &mut state.renderer,
-        &mut state.debug,
+        &mut state.debug,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
     );
 
     // State::new uses async code, so we're going to wait for it to finish
 
     let mut a = 0;
-
+    let mut last_render_time = Instant::now();
     event_loop.run(move |event, _, control_flow| {
 
         //use web_sys::console;
@@ -981,6 +997,31 @@ pub async fn run() {
         //let doc = win.document().expect("0");
         
         match event {
+
+            winit::event::Event::MainEventsCleared => {
+                // If there are events pending
+                if !iced_state.is_queue_empty() {
+                    // We update iced
+                    let _ = iced_state.update(
+                        state.viewport.logical_size(),
+                        conversion::cursor_position(
+                            state.cursor_position,
+                            state.viewport.scale_factor(),
+                        ),
+                        &mut state.renderer,
+                        &iced_wgpu::Theme::Matrix,
+                        &renderer::Style { text_color:  Color::from_rgb(
+                                0x01 as f32 / 255.0,
+                                0x01 as f32 / 255.0,
+                                0x01 as f32 / 255.0,
+                            ) 
+                        },
+                        &mut clipboard,
+                        &mut state.debug,
+                    );  
+                }
+                window.request_redraw();
+            }
 
             winit::event::Event::DeviceEvent {
                 event: DeviceEvent::MouseMotion{ delta, },
@@ -996,6 +1037,18 @@ pub async fn run() {
             } if window_id == window.id() => {
                 {
                     match event {
+
+                        #[cfg(not(target_arch="wasm32"))]
+                        WindowEvent::CloseRequested
+                        |   WindowEvent::KeyboardInput {
+                            input:
+                                KeyboardInput {
+                                    state: ElementState::Pressed,
+                                    virtual_keycode: Some(VirtualKeyCode::Escape),
+                                    ..
+                                },
+                            ..
+                        } => *control_flow = ControlFlow::Exit,
 
                         WindowEvent::ModifiersChanged(new_modifiers) => {
                             modifiers = *new_modifiers;
@@ -1020,47 +1073,29 @@ pub async fn run() {
 
                     state.input(event);
 
-                    if let Some(event) = iced_winit::conversion::window_event(
-                        &event,
-                        window.scale_factor(),
-                        modifiers,
-                    ) {
-                        iced_state.queue_event(event);
+                    if state.cli_status{
+
+                        if let Some(event) = iced_winit::conversion::window_event(
+                            &event,
+                            window.scale_factor(),
+                            modifiers,
+                        ) {
+                            iced_state.queue_event(event);
+                        }
+
                     }
 
-                }
-            }
-
-
-            winit::event::Event::MainEventsCleared => {
-                // If there are events pending
-                if !iced_state.is_queue_empty() {
-                    // We update iced
-                    let _ = iced_state.update(
-                        state.viewport.logical_size(),
-                        conversion::cursor_position(
-                            state.cursor_position,
-                            state.viewport.scale_factor(),
-                        ),
-                        &mut state.renderer,
-                        &iced_wgpu::Theme::Matrix,
-                        &renderer::Style { text_color:  Color::from_rgb(
-                                0x01 as f32 / 255.0,
-                                0x01 as f32 / 255.0,
-                                0x01 as f32 / 255.0,
-                            ) 
-                        },
-                        &mut clipboard,
-                        &mut state.debug,
-                    );
-
-                    // and request a redraw
-                    window.request_redraw();
+                    
                 }
             }
 
             winit::event::Event::RedrawRequested(window_id) if window_id == window.id() => {
-                state.update();
+
+                let now = Instant::now();
+                let dt = now - last_render_time;
+                last_render_time = now;
+                state.update(dt);
+
                 match state.render() {
                     Ok(_) => {}
                     // Reconfigure the surface if lost
@@ -1076,7 +1111,6 @@ pub async fn run() {
                         iced_state.mouse_interaction(),//iced_state note
                     ),
                 );
-                
             }
             _ => {}
         }

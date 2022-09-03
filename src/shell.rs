@@ -36,19 +36,17 @@ impl Program for Controls {
 
     fn view(&self) -> Element<Message, Renderer> {
         let text = &self.text;
-
+        let cli:TextInput<Message,Renderer> = TextInput::new(
+            ">",
+            text,
+            Message::TextChanged,
+        );
         Row::new()
             .width(Length::Fill)
             .height(Length::Fill)
             .align_items(Alignment::Start)
             .padding(20)
             .spacing(20)
-            .push(
-                TextInput::new(
-                ">",
-                text,
-                Message::TextChanged,
-            ))
-        .into()
+            .push(cli).into()
     }
 }

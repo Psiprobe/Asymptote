@@ -1,5 +1,6 @@
 use cgmath::*;
 use iced_winit::winit::event::*;
+use std::time::Duration;
 
 pub struct Camera {
     pub eye: cgmath::Point3<f32>,
@@ -64,14 +65,23 @@ impl CameraUniform {
 pub struct CameraController {
     speed: f32,
     sensitivity: f32,
+
+    
     is_up_pressed: bool,
     is_down_pressed: bool,
     is_forward_pressed: bool,
     is_backward_pressed: bool,
     is_left_pressed: bool,
     is_right_pressed: bool,
+
+    forward_count:f32,
+    left_count:f32,
+
+    pub is_slash_released:bool,
+    pub is_slash_pressed: bool,
     pub mouse_left_pressed: bool,
     pub mouse_right_pressed: bool,
+
     rotate_horizontal: f32,
     rotate_vertical: f32,
     radius:f32,
@@ -87,19 +97,27 @@ impl CameraController {
         Self {
             speed,
             sensitivity,
+
+            is_slash_released:false,
+            is_slash_pressed:false,
             is_up_pressed: false,
             is_down_pressed: false,
             is_forward_pressed: false,
             is_backward_pressed: false,
+
+            forward_count:0.0,
+            left_count:0.0,
+
             is_left_pressed: false,
             is_right_pressed: false,
+            
             mouse_left_pressed: false,
             mouse_right_pressed: false,
             rotate_horizontal: 0.0,
             rotate_vertical: 0.0,
-            radius:1000.0,
+            radius:2828.427125,
             pos_x: 0.0,
-            pos_y: 300.0,
+            pos_y: 1000.0,
             pos_z: 0.0,
             yaw:0.0,
         }
@@ -137,7 +155,14 @@ impl CameraController {
                 ..
             } => {
                 let is_pressed = *state == ElementState::Pressed;
+                let is_released = *state == ElementState::Released;
                 match keycode {
+
+                    VirtualKeyCode::F12 => {
+                        self.is_slash_pressed = is_pressed;
+                        self.is_slash_released = is_released;
+                        true
+                    }
                     VirtualKeyCode::Space => {
                         self.is_up_pressed = is_pressed;
                         true
@@ -174,13 +199,41 @@ impl CameraController {
         self.rotate_vertical = mouse_dy as f32;
     }
 
-    pub fn update_camera(&mut self, camera: &mut Camera) {
+    pub fn update_camera(&mut self, camera: &mut Camera ,dt: Duration) {
+
+        let dt = dt.as_secs_f32();
         
         self.yaw += self.rotate_horizontal;
         self.pos_x = Rad::sin(Rad(self.yaw*self.sensitivity))*self.radius;
         self.pos_z = Rad::cos(Rad(self.yaw*self.sensitivity))*self.radius;
 
-        camera.eye = cgmath::Point3::new(self.pos_x,self.pos_y,self.pos_z);
+        let forward = Vector3::new(self.pos_x, 0.0, self.pos_z).normalize();
+        let left = camera.up.cross(forward).normalize();
+
+        
+
+        if self.is_forward_pressed{
+            self.forward_count -= dt* self.speed;
+        } 
+        if self.is_backward_pressed{
+            self.forward_count += dt* self.speed;
+        } 
+
+        if self.is_left_pressed{
+            self.left_count -= dt* self.speed;
+        }
+        if self.is_right_pressed{
+            self.left_count += dt* self.speed;
+        }
+
+        camera.target += (self.forward_count-self.forward_count%3.0) * forward;
+
+        camera.target += (self.left_count-self.left_count%1.0) * left;
+
+        self.forward_count %= 3.0;
+        self.left_count %= 1.0;
+
+        camera.eye = cgmath::Point3::new(self.pos_x,self.pos_y,self.pos_z)+(camera.target-cgmath::Point3::new(0.0,0.0,0.0));
         
         self.rotate_horizontal = 0.0;
         self.rotate_vertical = 0.0;
