@@ -25,6 +25,7 @@ use winit::{
 use wasm_bindgen::prelude::*;
 
 
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 struct Vertex {
@@ -228,7 +229,7 @@ struct State {
 
 }
 impl State {
-    async fn new(window: &Window) -> Self {
+    async fn new(window: &Window,scr_width:u32,scr_height:u32) -> Self {
 
         // Initialize staging belt
         let staging_belt = wgpu::util::StagingBelt::new(5 * 1024);
@@ -237,7 +238,7 @@ impl State {
 
         let size = window.inner_size();
         let viewport = Viewport::with_physical_size(
-            Size::new(1920,1200),
+            Size::new(scr_width,scr_height),
             //todos
             window.scale_factor(),
         );
@@ -293,8 +294,8 @@ impl State {
         });
 
         let texture_size = wgpu::Extent3d {
-            width: 1920/2,
-            height: 1200/2,
+            width: scr_width/2,
+            height: scr_height/2,
             depth_or_array_layers: 1,
         };
 
@@ -947,8 +948,23 @@ pub async fn run() {
         .build(&event_loop)
         .unwrap();
     //window.set_cursor_visible(false);
+
+    let mut scr_width = window.inner_size().width;
+    let mut scr_height = window.inner_size().height;
+
     #[cfg(target_arch = "wasm32")]
     {
+
+        use wasm_bindgen::prelude::*;
+
+        #[wasm_bindgen(module = "/tab.js")]
+        extern "C" {
+            fn get_width() -> u32;
+            fn get_height() -> u32;
+        }
+
+        scr_width = get_width();
+        scr_height = get_height();
 
         use winit::platform::web::WindowExtWebSys;
         use web_sys::console;
@@ -969,7 +985,7 @@ pub async fn run() {
         .expect("Couldn't append canvas to document body.");
     }
 
-    let mut state = State::new(&window).await;
+    let mut state = State::new(&window,scr_width,scr_height).await;
     let mut modifiers = ModifiersState::default();
     let mut clipboard = Clipboard::connect(&window);
 

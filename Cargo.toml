@@ -8,7 +8,7 @@ author = "Psiprobe"
 crate-type = ["cdylib", "rlib"]
 
 [[bin]]
-name = "Asymptote"
+name = "asymptote"
 path = "src/main.rs"
 
 [dependencies]
