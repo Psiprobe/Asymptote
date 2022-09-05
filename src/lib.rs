@@ -244,7 +244,7 @@ impl State {
         );
 
         let cursor_position = PhysicalPosition::new(-1.0, -1.0);
-        let cli_status = false;
+        let cli_status = true;
         let cli_flag = false;
         #[cfg(target_arch = "wasm32")]
         let default_backend = wgpu::Backends::GL;

@@ -158,7 +158,7 @@ impl CameraController {
                 let is_released = *state == ElementState::Released;
                 match keycode {
 
-                    VirtualKeyCode::F12 => {
+                    VirtualKeyCode::F3 => {
                         self.is_slash_pressed = is_pressed;
                         self.is_slash_released = is_released;
                         true
