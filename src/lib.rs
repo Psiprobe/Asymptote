@@ -398,20 +398,6 @@ impl State {
             label: Some("uniform_bind_group"),
         });
 
-
-
-
-
-
-
-
-
-
-
-
-        
-
-
         let diffuse_texture = device.create_texture(
             &wgpu::TextureDescriptor {
                 
@@ -869,10 +855,10 @@ impl State {
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(
                             wgpu::Color {
-                                r: 0.0,
-                                g: 0.0,
-                                b: 0.0,
-                                a: 0.0,
+                                r: 0.01,
+                                g: 0.01,
+                                b: 0.01,
+                                a: 0.01,
                             }
                         ),
                         store: true,
