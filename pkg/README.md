@@ -1,2 +1,2 @@
 # Asymptote
-Wgpu favored game engine (WIP)
+WIP Wgpu favored game engine

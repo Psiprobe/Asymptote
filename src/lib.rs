@@ -316,8 +316,8 @@ impl State {
             eye: (0.0, 0.0, 0.0).into(),
             target: (0.0, 0.0, 0.0).into(),
             up: cgmath::Vector3::unit_y(),
-            aspect: config.width as f32 / config.height as f32,
-            fovy: 300.0,
+            aspect: scr_width as f32 / scr_height as f32,
+            fovy: scr_height as f32 / 4.0 as f32,
             znear: -10000.0,
             zfar: 10000.0,
         };
