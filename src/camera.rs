@@ -1,3 +1,4 @@
+use std::num;
 use cgmath::*;
 use iced_winit::winit::event::*;
 use std::time::Duration;
@@ -5,6 +6,7 @@ use std::time::Duration;
 pub struct Camera {
     pub eye: cgmath::Point3<f32>,
     pub target: cgmath::Point3<f32>,
+    pub position: cgmath::Point3<f32>,
     pub up: cgmath::Vector3<f32>,
     pub aspect: f32,
     pub fovy: f32,
@@ -63,9 +65,12 @@ impl CameraUniform {
 }
 
 pub struct CameraController {
+
+    scr_width: f32,
+    scr_height: f32,
+    aspect: f32,
     speed: f32,
     sensitivity: f32,
-
     
     is_up_pressed: bool,
     is_down_pressed: bool,
@@ -77,11 +82,6 @@ pub struct CameraController {
     forward_count:f32,
     left_count:f32,
 
-    pub is_slash_released:bool,
-    pub is_slash_pressed: bool,
-    pub mouse_left_pressed: bool,
-    pub mouse_right_pressed: bool,
-
     rotate_horizontal: f32,
     rotate_vertical: f32,
     radius:f32,
@@ -89,12 +89,27 @@ pub struct CameraController {
     pos_y: f32,
     pos_z: f32,
     yaw:f32,
+
+    pub is_slash_released:bool,
+    pub is_slash_pressed: bool,
+    pub mouse_left_pressed: bool,
+    pub mouse_right_pressed: bool,
+
+    x_current: f32,
+    y_current: f32,
+    x_offset: f32,
+    y_offset: f32,
 }
 
 
 impl CameraController {
-    pub fn new(speed: f32, sensitivity: f32) -> Self {
+    pub fn new(scr_width:f32, scr_height:f32, speed: f32, sensitivity: f32) -> Self {
         Self {
+
+            scr_width,
+            scr_height,
+            aspect: 0.0,
+            
             speed,
             sensitivity,
 
@@ -113,6 +128,12 @@ impl CameraController {
             
             mouse_left_pressed: false,
             mouse_right_pressed: false,
+
+            x_current:0.0,
+            y_current:0.0,
+            x_offset: 0.0,
+            y_offset: 0.0,
+            
             rotate_horizontal: 0.0,
             rotate_vertical: 0.0,
             radius:2828.427125,
@@ -194,9 +215,14 @@ impl CameraController {
         }
     }
 
-    pub fn process_mouse(&mut self, mouse_dx: f64, mouse_dy: f64) {
+    pub fn process_mouse_motion(&mut self, mouse_dx: f64, mouse_dy: f64) {
         self.rotate_horizontal = mouse_dx as f32;
         self.rotate_vertical = mouse_dy as f32;
+    }
+
+    pub fn process_mouse_position(&mut self, mouse_pos_x:f64,mouse_pos_y:f64){
+        self.x_offset = mouse_pos_x as f32 - self.scr_width/2.0;
+        self.y_offset = mouse_pos_y as f32 - self.scr_height/2.0;
     }
 
     pub fn update_camera(&mut self, camera: &mut Camera ,dt: Duration) {
@@ -226,14 +252,40 @@ impl CameraController {
             self.left_count += dt* self.speed;
         }
 
-        camera.target += (self.forward_count-self.forward_count%3.0) * forward;
-
-        camera.target += (self.left_count-self.left_count%1.0) * left;
+        camera.position += (self.forward_count-self.forward_count%3.0) * forward;
+        camera.position += (self.left_count-self.left_count%1.0) * left;
 
         self.forward_count %= 3.0;
         self.left_count %= 1.0;
 
-        camera.eye = cgmath::Point3::new(self.pos_x,self.pos_y,self.pos_z)+(camera.target-cgmath::Point3::new(0.0,0.0,0.0));
+        self.aspect = self.scr_width /self.scr_height;
+
+        //camera accelerate calulate
+        
+        if  (self.x_offset / 2.0 - self.x_current).abs().sqrt() > 1.0 { //avoid glitching loop
+            if self.x_current < self.x_offset / 2.0{
+                self.x_current += (self.x_offset / 2.0 - self.x_current).sqrt()*dt*60.0;
+            }
+            else {
+                self.x_current -= (self.x_current - self.x_offset / 2.0).sqrt()*dt*60.0;
+            }
+        }
+
+        if (self.y_offset * self.aspect / 2.0 - self.y_current).abs().sqrt() > 1.0 {
+
+            if self.y_current < self.y_offset * self.aspect / 2.0{
+                self.y_current += (self.y_offset * self.aspect / 2.0 - self.y_current).sqrt()*dt*60.0;
+            }
+            else {
+                self.y_current -= (self.y_current - self.y_offset * self.aspect / 2.0).sqrt()*dt*60.0;
+            }
+        }
+
+        camera.target = camera.position + (self.x_current - self.x_current%3.0) * left + (self.y_current - self.y_current%3.0) * forward;
+
+        camera.eye = cgmath::Point3::new(self.pos_x,self.pos_y,self.pos_z)+(
+            camera.target-cgmath::Point3::new(0.0,0.0,0.0)
+        );
         
         self.rotate_horizontal = 0.0;
         self.rotate_vertical = 0.0;

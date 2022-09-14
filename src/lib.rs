@@ -1,5 +1,3 @@
-#[allow(dead_code)]
-
 mod camera;
 mod shell;
 
@@ -314,6 +312,7 @@ impl State {
         ///////////////////////////Camera////////////////////////////
         let camera = camera::Camera {
             eye: (0.0, 0.0, 0.0).into(),
+            position: (0.0, 0.0, 0.0).into(),
             target: (0.0, 0.0, 0.0).into(),
             up: cgmath::Vector3::unit_y(),
             aspect: scr_width as f32 / scr_height as f32,
@@ -322,7 +321,7 @@ impl State {
             zfar: 10000.0,
         };
 
-        let camera_controller = camera::CameraController::new(120.0,0.002);
+        let camera_controller = camera::CameraController::new(scr_width as f32 , scr_height as f32,600.0,0.002);
         let mut camera_uniform = camera::CameraUniform::new();
         camera_uniform.update_view_proj(&camera);
 
@@ -655,10 +654,6 @@ impl State {
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
-
-            
-            // If the pipeline will be used with a multiview render pass, this
-            // indicates how many array layers the attachments will have.
             multiview: None,
         });
 
@@ -766,8 +761,9 @@ impl State {
     fn update(&mut self, dt: std::time::Duration) {
 
         self.camera_controller.update_camera(&mut self.camera, dt);
+        self.camera_controller.process_mouse_position(self.cursor_position.x, self.cursor_position.y);
         
-        self.uniform.update((960.0 - self.cursor_position.x as f32)/960.0 * self.view_sensitivity , ( self.cursor_position.y as f32 - 540.0 )/540.0 * self.view_sensitivity);
+        //self.uniform.update((960.0 - self.cursor_position.x as f32)/960.0 * self.view_sensitivity , ( self.cursor_position.y as f32 - 540.0 )/540.0 * self.view_sensitivity);
         //texture offset disabled
 
         self.camera_uniform.update_view_proj(&self.camera);
@@ -1030,7 +1026,7 @@ pub async fn run() {
                 .. 
             } => if state.camera_controller.mouse_right_pressed 
             {
-                state.camera_controller.process_mouse(delta.0, delta.1)
+                state.camera_controller.process_mouse_motion(delta.0, delta.1)
             }
 
             winit::event::Event::WindowEvent {
@@ -1044,7 +1040,7 @@ pub async fn run() {
                         WindowEvent::CloseRequested
                         |   WindowEvent::KeyboardInput {
                             input:
-                                KeyboardInput {
+                                KeyboarsdInput {
                                     state: ElementState::Pressed,
                                     virtual_keycode: Some(VirtualKeyCode::Escape),
                                     ..
