@@ -12,5 +12,5 @@ export function set_width(this_width){
 }
 export function set_height(this_height){
     height=this_height;
-    console.log(get_height());
+    //console.log(get_height());
 }
