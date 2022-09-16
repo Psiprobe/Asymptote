@@ -2,11 +2,12 @@ mod camera;
 mod shell;
 
 use shell::Controls;
+use shell::Message::FrameRate;
 use std::iter;
 
 use iced_wgpu::{wgpu, Backend, Renderer, Settings, Viewport};
 use iced_winit::{
-    conversion, futures, program, renderer, winit, Clipboard, Color, Debug,
+    conversion, futures, program, Program,renderer, winit, Clipboard, Color, Debug,
     Size, time::Instant,
 };
 use iced_wgpu::wgpu::util::DeviceExt;
@@ -21,7 +22,10 @@ use winit::{
 };
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
-
+pub enum Message {
+    TextChanged(String),
+    FrameRate,
+}
 
 
 #[repr(C)]
@@ -100,7 +104,7 @@ impl Vertex_tex {
 }
 
 
-const NUM_INSTANCES_PER_ROW: u32 = 1;
+const NUM_INSTANCES_PER_ROW: u32 = 10;
 
 
 struct Instance {
@@ -225,10 +229,13 @@ struct State {
     cli_status: bool,
     cli_flag: bool,
 
+    framerate_timer: f32,
+
 }
 impl State {
     async fn new(window: &Window,scr_width:u32,scr_height:u32) -> Self {
 
+        let framerate_timer = 0.0;
         // Initialize staging belt
         let staging_belt = wgpu::util::StagingBelt::new(5 * 1024);
 
@@ -726,6 +733,8 @@ impl State {
             cli_status,
             cli_flag,
 
+            framerate_timer,
+
         }
 
     }
@@ -972,16 +981,15 @@ pub async fn run() {
     let mut clipboard = Clipboard::connect(&window);
 
     // Initialize scene and GUI controls
-    let controls = Controls::new();
-
+    let control = Controls::new();
     // Initialize iced
-
     let mut iced_state = program::State::new(
-        controls,
+        control,
         state.viewport.logical_size(),
         &mut state.renderer,
         &mut state.debug,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
     );
+    
 
     // State::new uses async code, so we're going to wait for it to finish
 
@@ -1000,6 +1008,7 @@ pub async fn run() {
                 // If there are events pending
                 if !iced_state.is_queue_empty() {
                     // We update iced
+                    
                     let _ = iced_state.update(
                         state.viewport.logical_size(),
                         conversion::cursor_position(
@@ -1040,7 +1049,7 @@ pub async fn run() {
                         WindowEvent::CloseRequested
                         |   WindowEvent::KeyboardInput {
                             input:
-                                KeyboarsdInput {
+                                KeyboardInput {
                                     state: ElementState::Pressed,
                                     virtual_keycode: Some(VirtualKeyCode::Escape),
                                     ..
@@ -1089,10 +1098,27 @@ pub async fn run() {
 
             winit::event::Event::RedrawRequested(window_id) if window_id == window.id() => {
 
+
                 let now = Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
                 state.update(dt);
+
+                if state.framerate_timer<1.0 {
+                    state.framerate_timer += dt.as_secs_f32();
+                }
+                else {
+                    state.framerate_timer = 0.0;
+                    iced_state.queue_message(FrameRate((1.0 / dt.as_secs_f32())as i32));
+                }
+                
+
+                let mut t = &iced_state.program().text;
+                #[cfg(target_arch = "wasm32")]{
+                    use web_sys::console;
+
+                    console::log_1(&t.into());
+                }
 
                 match state.render() {
                     Ok(_) => {}

@@ -1,4 +1,3 @@
-use std::num;
 use cgmath::*;
 use iced_winit::winit::event::*;
 use std::time::Duration;
