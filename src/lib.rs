@@ -230,12 +230,14 @@ struct State {
     cli_flag: bool,
 
     framerate_timer: f32,
+    framerate_count: i32,
 
 }
 impl State {
     async fn new(window: &Window,scr_width:u32,scr_height:u32) -> Self {
 
         let framerate_timer = 0.0;
+        let framerate_count = 1;
         // Initialize staging belt
         let staging_belt = wgpu::util::StagingBelt::new(5 * 1024);
 
@@ -734,6 +736,7 @@ impl State {
             cli_flag,
 
             framerate_timer,
+            framerate_count,
 
         }
 
@@ -1106,10 +1109,12 @@ pub async fn run() {
 
                 if state.framerate_timer<1.0 {
                     state.framerate_timer += dt.as_secs_f32();
+                    state.framerate_count += 1;
                 }
                 else {
+                    iced_state.queue_message(FrameRate(state.framerate_count));
                     state.framerate_timer = 0.0;
-                    iced_state.queue_message(FrameRate((1.0 / dt.as_secs_f32())as i32));
+                    state.framerate_count = 1;
                 }
                 
 

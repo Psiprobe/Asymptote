@@ -61,7 +61,7 @@ impl Program for Controls {
             .spacing(5)
             .push(cli)
             .push(
-                Text::new("Current FPS: ".to_owned() + &self.fps.to_string())
+                Text::new("FPS: ".to_owned() + &self.fps.to_string())
                     .style(Color::new(0.0,1.0,0.0,1.0)),
             )
             .into()
