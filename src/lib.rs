@@ -2,7 +2,7 @@ mod camera;
 mod shell;
 
 use shell::Controls;
-use shell::Message::{FrameUpdate,Update};
+use shell::Message::{FrameUpdate,Update,ServerLog};
 use std::iter;
 
 use iced_wgpu::{wgpu, Backend, Renderer, Settings, Viewport};
@@ -1151,6 +1151,8 @@ pub async fn run() {
         }else{
             if a == 33 {
                 state.cli_status = true;
+                iced_state.queue_message(ServerLog("Welcome to ASYMPTOTE Industries (TM) !".to_string()));
+                //iced enabled && welcome message
             }
             if a>777 {
                 

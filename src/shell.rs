@@ -27,6 +27,7 @@ pub enum Message {
     OnSubmit,
     FrameUpdate(i32),
     Update,
+    ServerLog(String),
 }
 
 impl Controls {
@@ -68,7 +69,7 @@ impl Program for Controls {
             }
 
             Message::Update =>{
-
+                
                 if self.text_column.len() > 0 && self.text_column[0].timer < 0.0 {
                     if self.text_column[0].alpha - 0.01 > 0.0{
                         self.text_column[0].alpha -= 0.01
@@ -77,6 +78,9 @@ impl Program for Controls {
                     }
                 }
 
+            }
+            Message::ServerLog(text) => {
+                self.text_column.push(TextColumn::new(text));
             }
         }
 
