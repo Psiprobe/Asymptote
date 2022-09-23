@@ -2,12 +2,12 @@ mod camera;
 mod shell;
 
 use shell::Controls;
-use shell::Message::FrameRate;
+use shell::Message::{FrameUpdate,Update};
 use std::iter;
 
 use iced_wgpu::{wgpu, Backend, Renderer, Settings, Viewport};
 use iced_winit::{
-    conversion, futures, program, Program,renderer, winit, Clipboard, Color, Debug,
+    conversion, futures, program, renderer, winit, Clipboard, Color, Debug,
     Size, time::Instant,
 };
 use iced_wgpu::wgpu::util::DeviceExt;
@@ -219,8 +219,6 @@ struct State {
     diffuse_texture:wgpu::Texture,
     diffuse_bind_group: wgpu::BindGroup,
 
-    view_sensitivity: f32,
-
     instances: Vec<Instance>,
     instance_buffer: wgpu::Buffer,
 
@@ -251,7 +249,7 @@ impl State {
         );
 
         let cursor_position = PhysicalPosition::new(-1.0, -1.0);
-        let cli_status = true;
+        let cli_status = false;
         let cli_flag = false;
         #[cfg(target_arch = "wasm32")]
         let default_backend = wgpu::Backends::GL;
@@ -688,7 +686,8 @@ impl State {
         });
 
         let num_vertices = VERTICES.len() as u32;
-        let view_sensitivity = 0.3;
+
+        //let view_sensitivity = 0.3;
         
         Self {
 
@@ -724,8 +723,6 @@ impl State {
             //texture_size,
             diffuse_texture,
             diffuse_bind_group,
-            
-            view_sensitivity,
 
             instances,
             instance_buffer,
@@ -874,6 +871,7 @@ impl State {
                 })],
                 depth_stencil_attachment: None,
             });
+
         
             render_pass.set_pipeline(&self.render_quad_pipeline);
 
@@ -884,6 +882,7 @@ impl State {
             render_pass.draw(0..6, 0..1);
             
         }
+        
         if self.cli_status{
             self.renderer.with_primitives(|backend, primitive| {
                 backend.present(
@@ -978,7 +977,6 @@ pub async fn run() {
         })
         .expect("Couldn't append canvas to document body.");
     }
-
     let mut state = State::new(&window,scr_width,scr_height).await;
     let mut modifiers = ModifiersState::default();
     let mut clipboard = Clipboard::connect(&window);
@@ -1107,17 +1105,16 @@ pub async fn run() {
                 last_render_time = now;
                 state.update(dt);
 
+                iced_state.queue_message(Update);
                 if state.framerate_timer<1.0 {
                     state.framerate_timer += dt.as_secs_f32();
                     state.framerate_count += 1;
                 }
                 else {
-                    iced_state.queue_message(FrameRate(state.framerate_count));
+                    iced_state.queue_message(FrameUpdate(state.framerate_count));
                     state.framerate_timer = 0.0;
                     state.framerate_count = 1;
                 }
-                
-
                 let mut t = &iced_state.program().text;
                 #[cfg(target_arch = "wasm32")]{
                     use web_sys::console;
@@ -1152,7 +1149,11 @@ pub async fn run() {
                 *control_flow = ControlFlow::Exit
             }
         }else{
+            if a == 33 {
+                state.cli_status = true;
+            }
             if a>777 {
+                
                 a = 777;
             }
             

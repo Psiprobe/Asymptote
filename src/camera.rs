@@ -23,7 +23,6 @@ impl Camera {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
-
 pub struct Uniform {
     offset:[f32; 3],
     _padding:u32,
