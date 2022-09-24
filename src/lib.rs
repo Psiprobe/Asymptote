@@ -1152,6 +1152,7 @@ pub async fn run() {
             if a == 33 {
                 state.cli_status = true;
                 iced_state.queue_message(ServerLog("Welcome to ASYMPTOTE Industries (TM) !".to_string()));
+                iced_state.queue_message(ServerLog("Current Version: 1.0.0".to_string()));
                 //iced enabled && welcome message
             }
             if a>777 {

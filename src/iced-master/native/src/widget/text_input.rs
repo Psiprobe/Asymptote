@@ -799,7 +799,7 @@ pub fn draw<Renderer>(
                             bounds: Rectangle {
                                 x: text_bounds.x + text_value_width,
                                 y: text_bounds.y,
-                                width: 1.0,
+                                width: 3.0,
                                 height: text_bounds.height,
                             },
                             border_radius: 0.0,

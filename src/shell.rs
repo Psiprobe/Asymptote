@@ -56,7 +56,7 @@ impl Program for Controls {
             
             Message::OnSubmit => {
 
-                self.text_column.push(TextColumn::new((&self.text).to_string()));
+                self.text_column.push(TextColumn::new(("ADMIN: ".to_owned() + &self.text).to_string()));
                 self.text = String::from("");
                 
             }
@@ -101,7 +101,7 @@ impl Program for Controls {
         let text_columns = Column::with_children(
             self.text_column
                 .iter()
-                .map(|event| Text::new(format!("Admin: {}", event.text))
+                .map(|event| Text::new(format!("{}", event.text))
                 .style(Color::new(0.0,1.0,0.0,event.alpha))
                 .size(20))
                 .map(Element::from)
