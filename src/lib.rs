@@ -1,6 +1,8 @@
 mod camera;
 mod shell;
 
+use cgmath::Rotation3;
+
 use shell::Controls;
 use shell::Message::{FrameUpdate,Update,ServerLog};
 use std::iter;
@@ -27,6 +29,16 @@ pub enum Message {
     FrameRate,
 }
 
+#[repr(C)]
+#[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
+struct LightUniform {
+    position: [f32; 3],
+    // Due to uniforms requiring 16 byte (4 float) spacing, we need to use a padding field here
+    _padding: u32,
+    color: [f32; 3],
+
+    _padding2: u32,
+}
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -40,6 +52,13 @@ const VERTICES: &[Vertex] = &[
     Vertex { position: [0.0,  0.0, -25.0], color: [0.0, 0.03, 0.0] },
     Vertex { position: [25.0,  0.0, -0.0], color: [0.0, 0.03, 0.0] },
     Vertex { position: [-25.0, 0.0, -0.0], color: [0.0, 0.03, 0.0] },
+];
+
+const VERTICES_CUBE: &[Vertex] = &[
+    Vertex { position: [0.0,  0.0,  5.0], color: [1.0, 0.5, 1.0] },
+    Vertex { position: [0.0,  0.0, -5.0], color: [1.0, 0.5, 1.0] },
+    Vertex { position: [0.0,  50.0, -0.0], color: [1.0, 1.0, 1.0] },
+    Vertex { position: [0.0, -10.0, -0.0], color: [1.0, 0.5,1.0] },
 ];
 
 impl Vertex {
@@ -102,6 +121,7 @@ impl Vertex_tex {
         }
     }
 }
+
 
 
 const NUM_INSTANCES_PER_ROW: i32 = 50;
@@ -199,11 +219,14 @@ struct State {
 
     render_pipeline: wgpu::RenderPipeline,
     render_quad_pipeline: wgpu::RenderPipeline,
+    render_light_pipeline: wgpu::RenderPipeline,
 
     vertex_buffer: wgpu::Buffer,
     vertex_tex_buffer: wgpu::Buffer,
+    vertex_cube_buffer: wgpu::Buffer,
 
     num_vertices: u32,
+    num_cube_vertices: u32,
 
     camera: camera::Camera,
     camera_controller: camera::CameraController,
@@ -214,6 +237,10 @@ struct State {
     uniform: camera::Uniform,
     uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
+
+    light_uniform: LightUniform,
+    light_buffer: wgpu::Buffer,
+    light_bind_group: wgpu::BindGroup,
 
     //texture_size:wgpu::Extent3d,
     diffuse_texture:wgpu::Texture,
@@ -233,6 +260,8 @@ struct State {
 }
 impl State {
     async fn new(window: &Window,scr_width:u32,scr_height:u32) -> Self {
+
+
 
         let framerate_timer = 0.0;
         let framerate_count = 1;
@@ -404,6 +433,54 @@ impl State {
             label: Some("uniform_bind_group"),
         });
 
+
+
+        
+        let light_uniform = LightUniform {
+            position: [200.0, 20.0, 200.0],
+            _padding: 0,
+            color: [1.0, 1.0, 1.0],
+            _padding2: 0,
+        };
+        
+         // We'll want to update our lights position, so we use COPY_DST
+        let light_buffer = device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("Light VB"),
+                contents: bytemuck::cast_slice(&[light_uniform]),
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            }
+        );
+        
+        let light_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            }],
+            label: None,
+        });
+
+        let light_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &light_bind_group_layout,
+            entries: &[wgpu::BindGroupEntry {
+            binding: 0,
+            resource: light_buffer.as_entire_binding(),
+            }],
+            label: None,
+        });
+
+
+
+
+
+
+
         let diffuse_texture = device.create_texture(
             &wgpu::TextureDescriptor {
                 
@@ -506,6 +583,11 @@ impl State {
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/quad_shader.wgsl").into()),
         });
 
+        let light_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("LightShader"),
+            source: wgpu::ShaderSource::Wgsl(include_str!("shaders/light_shader.wgsl").into()),
+        });
+
 
 
 
@@ -521,6 +603,11 @@ impl State {
             usage: wgpu::BufferUsages::VERTEX,
         });
 
+        let vertex_cube_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Vertex Cube Buffer"),
+            contents: bytemuck::cast_slice(VERTICES_CUBE),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
 
 
 
@@ -533,7 +620,9 @@ impl State {
 
         let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("Render Pipeline Layout"),
-            bind_group_layouts: &[&camera_bind_group_layout],
+            bind_group_layouts: &[
+                &camera_bind_group_layout,
+            ],
             push_constant_ranges: &[],
         });
 
@@ -547,6 +636,15 @@ impl State {
                 push_constant_ranges: &[],
             }
         );
+
+        let render_light_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("Render Pipeline Layout"),
+            bind_group_layouts: &[
+                &camera_bind_group_layout,
+                &light_bind_group_layout,
+            ],
+            push_constant_ranges: &[],
+        });
 
 
 
@@ -664,6 +762,53 @@ impl State {
             multiview: None,
         });
 
+        let render_light_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+
+            label: Some("Render Light Pipeline"),
+            layout: Some(&render_light_pipeline_layout),
+
+            vertex: wgpu::VertexState {
+                module: &light_shader,
+                entry_point: "vs_main",
+                buffers: &[Vertex::desc()],
+            },
+
+            fragment: Some(wgpu::FragmentState {
+                module: &light_shader,
+                entry_point: "fs_main",
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: config.format,
+                    blend: Some(wgpu::BlendState {
+                        color: wgpu::BlendComponent::REPLACE,
+                        alpha: wgpu::BlendComponent::REPLACE,
+                    }),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+
+
+            primitive: wgpu::PrimitiveState {
+
+                topology: wgpu::PrimitiveTopology::LineList,
+                strip_index_format: None,
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: Some(wgpu::Face::Front),
+                polygon_mode: wgpu::PolygonMode::Fill,
+                unclipped_depth: false,
+                conservative: false,
+
+            },
+
+
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState {
+                count: 1,
+                mask: !0,
+                alpha_to_coverage_enabled: false,
+            },
+            multiview: None,
+        });
+
 
 
 
@@ -686,9 +831,10 @@ impl State {
         });
 
         let num_vertices = VERTICES.len() as u32;
+        let num_cube_vertices = VERTICES_CUBE.len() as u32;
 
         //let view_sensitivity = 0.3;
-        
+
         Self {
 
             staging_belt,
@@ -704,11 +850,14 @@ impl State {
 
             render_pipeline,
             render_quad_pipeline,
+            render_light_pipeline,
 
             vertex_buffer,
             vertex_tex_buffer,
+            vertex_cube_buffer,
 
             num_vertices,
+            num_cube_vertices,
 
             camera,
             camera_controller,
@@ -719,6 +868,10 @@ impl State {
             uniform,
             uniform_buffer,
             uniform_bind_group,
+
+            light_uniform,
+            light_buffer,
+            light_bind_group,
 
             //texture_size,
             diffuse_texture,
@@ -787,6 +940,14 @@ impl State {
             0,
             bytemuck::cast_slice(&[self.uniform]),
         );
+
+        let old_position: cgmath::Vector3<_> = self.light_uniform.position.into();
+        self.light_uniform.position =
+                (cgmath::Quaternion::from_axis_angle((0.0, 1.0, 0.0).into(), cgmath::Deg(1.0))
+                * old_position)
+                .into();
+        self.queue.write_buffer(&self.light_buffer, 0, bytemuck::cast_slice(&[self.light_uniform]));
+
     }
 
 
@@ -837,6 +998,15 @@ impl State {
             render_pass_texture.set_vertex_buffer(1, self.instance_buffer.slice(..));
 
             render_pass_texture.draw(0..self.num_vertices, 0..self.instances.len() as _);
+
+
+            render_pass_texture.set_pipeline(&self.render_light_pipeline);
+            render_pass_texture.set_bind_group(0, &self.camera_bind_group, &[]); 
+            render_pass_texture.set_bind_group(1, &self.light_bind_group, &[]);
+
+            render_pass_texture.set_vertex_buffer(0, self.vertex_cube_buffer.slice(..));
+
+            render_pass_texture.draw(0..self.num_cube_vertices ,0..1);
             
 
         }

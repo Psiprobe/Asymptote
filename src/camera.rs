@@ -223,7 +223,7 @@ impl CameraController {
     pub fn process_mouse_position(&mut self, mouse_pos_x:f64,mouse_pos_y:f64){
 
         
-        self.x_offset = (mouse_pos_x as f32 - self.scr_width/2.0);
+        self.x_offset = mouse_pos_x as f32 - self.scr_width/2.0;
 
             if self.x_offset >= self.scr_width/2.1 {
                self.scr_edge_flag = true;
@@ -233,7 +233,7 @@ impl CameraController {
             }
            
 
-        self.y_offset = (mouse_pos_y as f32 - self.scr_height/2.1);
+        self.y_offset = mouse_pos_y as f32 - self.scr_height/2.1;
             if self.y_offset >= self.scr_height/2.1 {
                 self.scr_edge_flag = true;
             }
