@@ -64,6 +64,8 @@ impl CameraUniform {
 
 pub struct CameraController {
 
+    scr_edge_flag: bool,
+
     scr_width: f32,
     scr_height: f32,
     aspect: f32,
@@ -103,7 +105,7 @@ pub struct CameraController {
 impl CameraController {
     pub fn new(scr_width:f32, scr_height:f32, speed: f32, sensitivity: f32) -> Self {
         Self {
-
+            scr_edge_flag: false,
             scr_width,
             scr_height,
             aspect: 0.0,
@@ -219,8 +221,32 @@ impl CameraController {
     }
 
     pub fn process_mouse_position(&mut self, mouse_pos_x:f64,mouse_pos_y:f64){
-        self.x_offset = mouse_pos_x as f32 - self.scr_width/2.0;
-        self.y_offset = mouse_pos_y as f32 - self.scr_height/2.0;
+
+        
+        self.x_offset = (mouse_pos_x as f32 - self.scr_width/2.0);
+
+            if self.x_offset >= self.scr_width/2.1 {
+               self.scr_edge_flag = true;
+            }
+            else if self.x_offset <= -self.scr_width/2.1 {
+                self.scr_edge_flag = true;
+            }
+           
+
+        self.y_offset = (mouse_pos_y as f32 - self.scr_height/2.1);
+            if self.y_offset >= self.scr_height/2.1 {
+                self.scr_edge_flag = true;
+            }
+            else if self.y_offset <= -self.scr_height/2.1 {
+                self.scr_edge_flag = true;
+            }
+
+
+            if !self.scr_edge_flag {
+                self.x_offset = 0.0;
+                self.y_offset = 0.0;
+            }  
+            self.scr_edge_flag = false;
     }
 
     pub fn update_camera(&mut self, camera: &mut Camera ,dt: Duration) {
