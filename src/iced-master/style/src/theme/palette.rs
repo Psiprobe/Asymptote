@@ -41,24 +41,24 @@ impl Palette {
             0x13 as f32 / 255.0,
         ),
         text: Color::from_rgb(
-            0x00 as f32 / 255.0,
             0xFF as f32 / 255.0,
-            0x00 as f32 / 255.0,
+            0x7F as f32 / 255.0,
+            0xFF as f32 / 255.0,
         ),
         primary: Color::from_rgb(
-            0x01 as f32 / 255.0,
             0xFF as f32 / 255.0,
-            0x01 as f32 / 255.0,
+            0x7F as f32 / 255.0,
+            0xFF as f32 / 255.0,
         ),
         success: Color::from_rgb(
-            0x01 as f32 / 255.0,
             0xFF as f32 / 255.0,
-            0x01 as f32 / 255.0,
+            0x7F as f32 / 255.0,
+            0xFF as f32 / 255.0,
         ),
         danger: Color::from_rgb(
-            0x01 as f32 / 255.0,
             0xFF as f32 / 255.0,
-            0x01 as f32 / 255.0,
+            0x7F as f32 / 255.0,
+            0xFF as f32 / 255.0,
         ),
     };
 

@@ -262,24 +262,24 @@ impl CameraController {
         
         if  (self.x_offset / 2.0 - self.x_current).abs().sqrt() > 1.0 { //avoid glitching loop
             if self.x_current < self.x_offset / 2.0{
-                self.x_current += (self.x_offset / 2.0 - self.x_current).sqrt()*dt*60.0;
+                self.x_current += (self.x_offset / 2.0 - self.x_current).sqrt()*dt*50.0;
             }
             else {
-                self.x_current -= (self.x_current - self.x_offset / 2.0).sqrt()*dt*60.0;
+                self.x_current -= (self.x_current - self.x_offset / 2.0).sqrt()*dt*50.0;
             }
         }
 
         if (self.y_offset * self.aspect / 2.0 - self.y_current).abs().sqrt() > 1.0 {
 
             if self.y_current < self.y_offset * self.aspect / 2.0{
-                self.y_current += (self.y_offset * self.aspect / 2.0 - self.y_current).sqrt()*dt*60.0;
+                self.y_current += (self.y_offset * self.aspect / 2.0 - self.y_current).sqrt()*dt*50.0;
             }
             else {
-                self.y_current -= (self.y_current - self.y_offset * self.aspect / 2.0).sqrt()*dt*60.0;
+                self.y_current -= (self.y_current - self.y_offset * self.aspect / 2.0).sqrt()*dt*50.0;
             }
         }
 
-        camera.target = camera.position + (self.x_current - self.x_current%3.0) * left + (self.y_current - self.y_current%3.0) * forward;
+        camera.target = camera.position + (self.x_current - self.x_current%1.0) * left + (self.y_current - self.y_current%3.0) * forward;
 
         camera.eye = cgmath::Point3::new(self.pos_x,self.pos_y,self.pos_z)+(
             camera.target-cgmath::Point3::new(0.0,0.0,0.0)

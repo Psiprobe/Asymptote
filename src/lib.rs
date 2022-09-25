@@ -36,10 +36,10 @@ struct Vertex {
 }
 
 const VERTICES: &[Vertex] = &[
-    Vertex { position: [0.0,  0.0,  500.0], color: [0.0, 1.0, 0.0] },
-    Vertex { position: [0.0,  0.0, -500.0], color: [0.0, 1.0, 0.0] },
-    Vertex { position: [500.0,  0.0, -0.0], color: [0.0, 1.0, 0.0] },
-    Vertex { position: [-500.0, 0.0, -0.0], color: [0.0, 1.0, 0.0] },
+    Vertex { position: [0.0,  0.0,  25.0], color: [0.0, 0.03, 0.0] },
+    Vertex { position: [0.0,  0.0, -25.0], color: [0.0, 0.03, 0.0] },
+    Vertex { position: [25.0,  0.0, -0.0], color: [0.0, 0.03, 0.0] },
+    Vertex { position: [-25.0, 0.0, -0.0], color: [0.0, 0.03, 0.0] },
 ];
 
 impl Vertex {
@@ -104,7 +104,7 @@ impl Vertex_tex {
 }
 
 
-const NUM_INSTANCES_PER_ROW: u32 = 10;
+const NUM_INSTANCES_PER_ROW: i32 = 50;
 
 
 struct Instance {
@@ -328,7 +328,7 @@ impl State {
             zfar: 10000.0,
         };
 
-        let camera_controller = camera::CameraController::new(scr_width as f32 , scr_height as f32,600.0,0.002);
+        let camera_controller = camera::CameraController::new(scr_width as f32 , scr_height as f32,300.0,0.002);
         let mut camera_uniform = camera::CameraUniform::new();
         camera_uniform.update_view_proj(&camera);
 
@@ -669,9 +669,9 @@ impl State {
 
 
 
-        let instances = (0..NUM_INSTANCES_PER_ROW).flat_map(|z| {
-            (0..NUM_INSTANCES_PER_ROW).map(move |x| {
-                let position = cgmath::Vector3 { x: x as f32, y: 0.0, z: z as f32 } ;
+        let instances = (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(|z| {
+            (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |x| {
+                let position = cgmath::Vector3 { x:(x*50) as f32, y: 0.0, z: (z*50) as f32 } ;
                 Instance {
                     position,
                 }
@@ -840,9 +840,7 @@ impl State {
             
 
         }
-        
 
-        
         let mut surface_encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
@@ -889,6 +887,7 @@ impl State {
                     &self.device,
                     &mut self.staging_belt,
                     &mut surface_encoder,
+                    //&mut texture_encoder,
                     &view,
                     primitive,
                     &self.viewport,
@@ -1106,6 +1105,7 @@ pub async fn run() {
                 state.update(dt);
 
                 iced_state.queue_message(Update);
+                
                 if state.framerate_timer<1.0 {
                     state.framerate_timer += dt.as_secs_f32();
                     state.framerate_count += 1;
@@ -1115,11 +1115,12 @@ pub async fn run() {
                     state.framerate_timer = 0.0;
                     state.framerate_count = 1;
                 }
-                let mut t = &iced_state.program().text;
+                
+                
                 #[cfg(target_arch = "wasm32")]{
                     use web_sys::console;
 
-                    console::log_1(&t.into());
+                    //console::log_1(&t.into());
                 }
 
                 match state.render() {
@@ -1153,6 +1154,9 @@ pub async fn run() {
                 state.cli_status = true;
                 iced_state.queue_message(ServerLog("Welcome to ASYMPTOTE Industries (TM) !".to_string()));
                 iced_state.queue_message(ServerLog("Current Version: 1.0.0".to_string()));
+                
+
+
                 //iced enabled && welcome message
             }
             if a>777 {

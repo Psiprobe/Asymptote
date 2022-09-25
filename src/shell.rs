@@ -115,11 +115,11 @@ impl Program for Controls {
             .padding(20)
             .spacing(5)
             .push(cli)
-            .push(text_columns)
             .push(
                 Text::new("FPS: ".to_owned() + &self.fps.to_string())
                     .style(Color::new(0.0,1.0,0.0,1.0)).size(20),
             )
+            .push(text_columns)
             .into()
     }
 }
