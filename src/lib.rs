@@ -55,10 +55,55 @@ const VERTICES: &[Vertex] = &[
 ];
 
 const VERTICES_CUBE: &[Vertex] = &[
-    Vertex { position: [0.0,  0.0,  5.0], color: [1.0, 0.5, 1.0] },
-    Vertex { position: [0.0,  0.0, -5.0], color: [1.0, 0.5, 1.0] },
-    Vertex { position: [0.0,  50.0, -0.0], color: [1.0, 1.0, 1.0] },
-    Vertex { position: [0.0, -10.0, -0.0], color: [1.0, 0.5,1.0] },
+    Vertex { position: [0.0,  0.0,  5.0], color: [0.0, 1.0, 0.0] },
+    Vertex { position: [0.0,  0.0, -5.0], color: [0.0, 1.0, 0.0] },
+    Vertex { position: [0.0,  50.0, -0.0], color: [0.0, 1.0, 0.0] },
+    Vertex { position: [0.0, -10.0, -0.0], color: [0.0, 1.0,0.0] },
+];
+
+const VERTICES_CENTER: &[Vertex] = &[
+    Vertex { position: [10.0,  -100.0,  50.0], color: [1.0, 0.0, 0.0] },
+    Vertex { position: [10.0,  -100.0, -50.0], color: [1.0, 0.0, 0.0] },
+    Vertex { position: [10.0,  200.0, 50.0], color: [1.0, 0.0, 0.0] },
+    Vertex { position: [10.0,  -100.0,  -50.0], color: [1.0, 0.0,0.0] },
+    Vertex { position: [10.0, 200.0,  50.0], color: [1.0, 0.0, 0.0] },
+    Vertex { position: [10.0,  200.0, -50.0], color: [1.0, 0.0, 0.0] },
+
+    Vertex { position: [-10.0,  -100.0,  50.0], color: [-1.0, 0.0, 0.0] },
+    Vertex { position: [-10.0,  -100.0, -50.0], color: [-1.0, 0.0, 0.0] },
+    Vertex { position: [-10.0,  200.0, 50.0],   color: [-1.0, 0.0, 0.0] },
+    Vertex { position: [-10.0,  -100.0,  -50.0],color: [-1.0, 0.0,0.0] },
+    Vertex { position: [-10.0, 200.0,  50.0],   color: [-1.0, 0.0, 0.0] },
+    Vertex { position: [-10.0,  200.0, -50.0],  color: [-1.0, 0.0, 0.0] },
+
+    Vertex { position: [-10.0,  -100.0, 50.0], color: [0.0, 0.0, 1.0] },
+    Vertex { position: [10.0,  -100.0,  50.0], color: [0.0, 0.0, 1.0] },
+    Vertex { position: [-10.0,  200.0,  50.0],   color: [0.0, 0.0, 1.0] },
+    Vertex { position: [10.0,  -100.0, 50.0],color: [0.0, 0.0, 1.0] },
+    Vertex { position: [-10.0, 200.0,   50.0],   color: [0.0, 0.0, 1.0] },
+    Vertex { position: [10.0,  200.0,  50.0],  color: [0.0, 0.0, 1.0] },
+
+    Vertex { position: [-10.0,  -100.0, -50.0], color: [0.0, 0.0, -1.0] },
+    Vertex { position: [10.0,  -100.0,  -50.0], color: [0.0, 0.0, -1.0] },
+    Vertex { position: [-10.0,  200.0,  -50.0],   color: [0.0, 0.0, -1.0] },
+    Vertex { position: [10.0,  -100.0, -50.0],color: [0.0, 0.0, -1.0] },
+    Vertex { position: [-10.0, 200.0,   -50.0],   color: [0.0, 0.0, -1.0] },
+    Vertex { position: [10.0,  200.0,  -50.0],  color: [0.0, 0.0, -1.0] },
+
+    Vertex { position: [-10.0,  200.0, 50.0], color: [0.0, 1.0, 0.0] },
+    Vertex { position: [10.0,   200.0,  50.0], color: [0.0, 1.0, 0.0] },
+    Vertex { position: [-10.0,  200.0,  -50.0],   color: [0.0, 1.0, 0.0] },
+    Vertex { position: [10.0,  200.0, 50.0],color: [0.0, 1.0, 0.0] },
+    Vertex { position: [-10.0, 200.0,   -50.0],   color: [0.0, 1.0, 0.0] },
+    Vertex { position: [10.0,  200.0,  -50.0],  color: [0.0, 1.0, 0.0] },
+
+    Vertex { position: [-10.0,  -100.0, 50.0], color: [0.0, -1.0, -0.0] },
+    Vertex { position: [10.0,  -100.0,  50.0], color: [0.0, -1.0, -0.0] },
+    Vertex { position: [-10.0,  -100.0,  -50.0],   color: [0.0, -1.0, -0.0] },
+    Vertex { position: [10.0,  -100.0, 50.0],color: [0.0, -1.0, -0.0] },
+    Vertex { position: [-10.0, -100.0,   -50.0],   color: [0.0, -1.0, -0.0] },
+    Vertex { position: [10.0,  -100.0,  -50.0],  color: [0.0, -1.0, -0.0] },
+    
 ];
 
 impl Vertex {
@@ -220,13 +265,16 @@ struct State {
     render_pipeline: wgpu::RenderPipeline,
     render_quad_pipeline: wgpu::RenderPipeline,
     render_light_pipeline: wgpu::RenderPipeline,
+    render_center_pipeline: wgpu::RenderPipeline,
 
     vertex_buffer: wgpu::Buffer,
     vertex_tex_buffer: wgpu::Buffer,
     vertex_cube_buffer: wgpu::Buffer,
+    vertex_center_buffer: wgpu::Buffer,
 
     num_vertices: u32,
     num_cube_vertices: u32,
+    num_center_vertices: u32,
 
     camera: camera::Camera,
     camera_controller: camera::CameraController,
@@ -245,6 +293,8 @@ struct State {
     //texture_size:wgpu::Extent3d,
     diffuse_texture:wgpu::Texture,
     diffuse_bind_group: wgpu::BindGroup,
+
+    depth_texture_view:wgpu::TextureView,
 
     instances: Vec<Instance>,
     instance_buffer: wgpu::Buffer,
@@ -439,7 +489,7 @@ impl State {
         let light_uniform = LightUniform {
             position: [200.0, 20.0, 200.0],
             _padding: 0,
-            color: [1.0, 1.0, 1.0],
+            color: [0.3, 0.3, 0.3],
             _padding2: 0,
         };
         
@@ -493,7 +543,25 @@ impl State {
                 label: Some("diffuse_texture"),
             }
         );
+
+        let depth_texture = device.create_texture(
+            &wgpu::TextureDescriptor {
+                
+                size: texture_size,
+                mip_level_count: 1, 
+                sample_count: 1,
+                dimension: wgpu::TextureDimension::D2,
+                format: wgpu::TextureFormat::Depth32Float,//Bgra8UnormSrgb?
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT // 3.
+                | wgpu::TextureUsages::TEXTURE_BINDING,
+                label: Some("depth_texture"),
+            }
+        );
+
+
         let diffuse_texture_view = diffuse_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let depth_texture_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
+
         let diffuse_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
             address_mode_u: wgpu::AddressMode::Repeat,
             address_mode_v: wgpu::AddressMode::Repeat,
@@ -503,6 +571,21 @@ impl State {
             mipmap_filter: wgpu::FilterMode::Nearest,
             ..Default::default()
         });
+
+        let depth_sampler = device.create_sampler(
+            &wgpu::SamplerDescriptor { // 4.
+                address_mode_u: wgpu::AddressMode::ClampToEdge,
+                address_mode_v: wgpu::AddressMode::ClampToEdge,
+                address_mode_w: wgpu::AddressMode::ClampToEdge,
+                mag_filter: wgpu::FilterMode::Linear,
+                min_filter: wgpu::FilterMode::Linear,
+                mipmap_filter: wgpu::FilterMode::Nearest,
+                compare: Some(wgpu::CompareFunction::LessEqual), // 5.
+                lod_min_clamp: -100.0,
+                lod_max_clamp: 100.0,
+                ..Default::default()
+            }
+        );
 
 
         let texture_bind_group_layout =
@@ -573,6 +656,19 @@ impl State {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/shader.wgsl").into()),
@@ -586,6 +682,11 @@ impl State {
         let light_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("LightShader"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/light_shader.wgsl").into()),
+        });
+
+        let center_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("CenterShader"),
+            source: wgpu::ShaderSource::Wgsl(include_str!("shaders/center_shader.wgsl").into()),
         });
 
 
@@ -606,6 +707,12 @@ impl State {
         let vertex_cube_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Cube Buffer"),
             contents: bytemuck::cast_slice(VERTICES_CUBE),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+
+        let vertex_center_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Vertex Center Buffer"),
+            contents: bytemuck::cast_slice(VERTICES_CENTER),
             usage: wgpu::BufferUsages::VERTEX,
         });
 
@@ -638,6 +745,15 @@ impl State {
         );
 
         let render_light_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("Render Pipeline Layout"),
+            bind_group_layouts: &[
+                &camera_bind_group_layout,
+                &light_bind_group_layout,
+            ],
+            push_constant_ranges: &[],
+        });
+
+        let render_center_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("Render Pipeline Layout"),
             bind_group_layouts: &[
                 &camera_bind_group_layout,
@@ -697,7 +813,13 @@ impl State {
             },
 
 
-            depth_stencil: None,
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: wgpu::TextureFormat::Depth32Float,
+                depth_write_enabled: true,
+                depth_compare: wgpu::CompareFunction::Less, // 1.
+                stencil: wgpu::StencilState::default(), // 2.
+                bias: wgpu::DepthBiasState::default(),
+            }),
             multisample: wgpu::MultisampleState {
                 count: 1,
                 mask: !0,
@@ -732,8 +854,8 @@ impl State {
                 targets: &[Some(wgpu::ColorTargetState {
                     format: config.format,
                     blend: Some(wgpu::BlendState {
-                        color: wgpu::BlendComponent::REPLACE,
-                        alpha: wgpu::BlendComponent::REPLACE,
+                        color: wgpu::BlendComponent::OVER,
+                        alpha: wgpu::BlendComponent::OVER,
                     }),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
@@ -752,8 +874,8 @@ impl State {
 
             },
 
-
             depth_stencil: None,
+
             multisample: wgpu::MultisampleState {
                 count: 1,
                 mask: !0,
@@ -800,7 +922,67 @@ impl State {
             },
 
 
-            depth_stencil: None,
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: wgpu::TextureFormat::Depth32Float,
+                depth_write_enabled: true,
+                depth_compare: wgpu::CompareFunction::Less, // 1.
+                stencil: wgpu::StencilState::default(), // 2.
+                bias: wgpu::DepthBiasState::default(),
+            }),
+            multisample: wgpu::MultisampleState {
+                count: 1,
+                mask: !0,
+                alpha_to_coverage_enabled: false,
+            },
+            multiview: None,
+        });
+
+
+        let render_center_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+
+            label: Some("Render Light Pipeline"),
+            layout: Some(&render_center_pipeline_layout),
+
+            vertex: wgpu::VertexState {
+                module: &center_shader,
+                entry_point: "vs_main",
+                buffers: &[Vertex::desc()],
+            },
+
+            fragment: Some(wgpu::FragmentState {
+                module: &center_shader,
+                entry_point: "fs_main",
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: config.format,
+                    blend: Some(wgpu::BlendState {
+                        color: wgpu::BlendComponent::OVER,
+                        alpha: wgpu::BlendComponent::OVER,
+                    }),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+
+
+            primitive: wgpu::PrimitiveState {
+
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                strip_index_format: None,
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: None,
+                polygon_mode: wgpu::PolygonMode::Fill,
+                unclipped_depth: false,
+                conservative: false,
+
+            },
+
+
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: wgpu::TextureFormat::Depth32Float,
+                depth_write_enabled: true,
+                depth_compare: wgpu::CompareFunction::Less, // 1.
+                stencil: wgpu::StencilState::default(), // 2.
+                bias: wgpu::DepthBiasState::default(),
+            }),
             multisample: wgpu::MultisampleState {
                 count: 1,
                 mask: !0,
@@ -813,6 +995,22 @@ impl State {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
 
         let instances = (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(|z| {
             (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |x| {
@@ -832,6 +1030,7 @@ impl State {
 
         let num_vertices = VERTICES.len() as u32;
         let num_cube_vertices = VERTICES_CUBE.len() as u32;
+        let num_center_vertices = VERTICES_CENTER.len() as u32;
 
         //let view_sensitivity = 0.3;
 
@@ -851,13 +1050,16 @@ impl State {
             render_pipeline,
             render_quad_pipeline,
             render_light_pipeline,
+            render_center_pipeline,
 
             vertex_buffer,
             vertex_tex_buffer,
             vertex_cube_buffer,
+            vertex_center_buffer,
 
             num_vertices,
             num_cube_vertices,
+            num_center_vertices,
 
             camera,
             camera_controller,
@@ -876,6 +1078,7 @@ impl State {
             //texture_size,
             diffuse_texture,
             diffuse_bind_group,
+            depth_texture_view,
 
             instances,
             instance_buffer,
@@ -986,7 +1189,14 @@ impl State {
                         store: true,
                     },
                 })],
-                depth_stencil_attachment: None,
+                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                    view: &self.depth_texture_view,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: true,
+                    }),
+                    stencil_ops: None,
+                }),
             });
 
             
@@ -1007,6 +1217,14 @@ impl State {
             render_pass_texture.set_vertex_buffer(0, self.vertex_cube_buffer.slice(..));
 
             render_pass_texture.draw(0..self.num_cube_vertices ,0..1);
+
+            render_pass_texture.set_pipeline(&self.render_center_pipeline);
+            render_pass_texture.set_bind_group(0, &self.camera_bind_group, &[]); 
+            render_pass_texture.set_bind_group(1, &self.light_bind_group, &[]);
+
+            render_pass_texture.set_vertex_buffer(0, self.vertex_center_buffer.slice(..));
+
+            render_pass_texture.draw(0..self.num_center_vertices ,0..1);
             
 
         }
