@@ -27,7 +27,12 @@ fn vs_main(
 ) -> VertexOutput {
     var out: VertexOutput;
     out.clip_position = camera.view_proj * vec4<f32>(model.position, 1.0);
-    out.color = light.color;
+
+    let light_dir = normalize(light.position - model.position);
+
+    let diffuse_strength = max(dot(model.color, light_dir), 0.0);
+    out.color = light.color * diffuse_strength;
+
     return out;
 }
 
@@ -35,5 +40,5 @@ fn vs_main(
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    return vec4<f32>(in.color, 0.1);
+    return vec4<f32>(in.color, 0.7);
 }

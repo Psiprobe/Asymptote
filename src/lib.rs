@@ -489,7 +489,7 @@ impl State {
         let light_uniform = LightUniform {
             position: [200.0, 20.0, 200.0],
             _padding: 0,
-            color: [0.3, 0.3, 0.3],
+            color: [0.01, 0.01, 0.01],
             _padding2: 0,
         };
         
@@ -854,8 +854,8 @@ impl State {
                 targets: &[Some(wgpu::ColorTargetState {
                     format: config.format,
                     blend: Some(wgpu::BlendState {
-                        color: wgpu::BlendComponent::OVER,
-                        alpha: wgpu::BlendComponent::OVER,
+                        color: wgpu::BlendComponent::REPLACE,
+                        alpha: wgpu::BlendComponent::REPLACE,
                     }),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
