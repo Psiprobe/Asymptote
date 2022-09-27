@@ -31,9 +31,8 @@ fn vs_main(
     let light_dir = normalize(light.position - model.position);
 
     let diffuse_strength = max(dot(model.color, light_dir), 0.0);
-
-
     out.color = light.color * diffuse_strength;
+
     return out;
 }
 
