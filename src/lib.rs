@@ -169,7 +169,7 @@ impl Vertex_tex {
 
 
 
-const NUM_INSTANCES_PER_ROW: i32 = 50;
+const NUM_INSTANCES_PER_ROW: i32 = 500;
 
 
 struct Instance {
@@ -671,7 +671,7 @@ impl State {
 
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("shaders/shader.wgsl").into()),
+            source: wgpu::ShaderSource::Wgsl(include_str!("shaders/terrain_shader.wgsl").into()),
         });
 
         let quad_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
