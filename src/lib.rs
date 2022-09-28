@@ -487,9 +487,9 @@ impl State {
 
         
         let light_uniform = LightUniform {
-            position: [200.0, 20.0, 200.0],
+            position: [200.0, 300.0, 200.0],
             _padding: 0,
-            color: [0.01, 0.01, 0.01],
+            color: [0.012, 0.02, 0.014],
             _padding2: 0,
         };
         
