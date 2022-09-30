@@ -1209,7 +1209,6 @@ impl State {
 
             render_pass_texture.draw(0..self.num_vertices, 0..self.instances.len() as _);
 
-
             render_pass_texture.set_pipeline(&self.render_light_pipeline);
             render_pass_texture.set_bind_group(0, &self.camera_bind_group, &[]); 
             render_pass_texture.set_bind_group(1, &self.light_bind_group, &[]);
@@ -1542,9 +1541,6 @@ pub async fn run() {
                 state.cli_status = true;
                 iced_state.queue_message(ServerLog("Welcome to ASYMPTOTE Industries (TM) !".to_string()));
                 iced_state.queue_message(ServerLog("Current Version: 1.0.0".to_string()));
-                
-
-
                 //iced enabled && welcome message
             }
             if a>777 {

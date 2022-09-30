@@ -61,7 +61,7 @@ impl Program for Controls {
                 
             }
             
-            Message::FrameUpdate(fps) =>{
+            Message::FrameUpdate(fps) => {
                 self.fps = fps;
                 for x in self.text_column.iter_mut() {
                     x.timer -= 1.0;
