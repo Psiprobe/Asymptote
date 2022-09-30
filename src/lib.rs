@@ -1,10 +1,12 @@
 mod camera;
 mod shell;
+mod command;
 
 use cgmath::Rotation3;
 
 use shell::Controls;
-use shell::Message::{FrameUpdate,Update,ServerLog};
+use shell::Message::{FrameUpdate,Update,ServerLog,CommandParsed};
+use command::Descriptor;
 use std::iter;
 
 use iced_wgpu::{wgpu, Backend, Renderer, Settings, Viewport};
@@ -249,8 +251,11 @@ impl InstanceRaw {
 
 
 
-struct State {
+pub struct State {
 
+    iced_state: program::State<shell::Controls>,
+    clipboard: Clipboard,
+    modifiers: ModifiersState,
     staging_belt: wgpu::util::StagingBelt,
     size: winit::dpi::PhysicalSize<u32>,
     cursor_position: winit::dpi::PhysicalPosition<f64>,
@@ -311,22 +316,10 @@ struct State {
 impl State {
     async fn new(window: &Window,scr_width:u32,scr_height:u32) -> Self {
 
-
-
         let framerate_timer = 0.0;
         let framerate_count = 1;
         // Initialize staging belt
-        let staging_belt = wgpu::util::StagingBelt::new(5 * 1024);
-
-        let debug = Debug::new();
-
-        let size = window.inner_size();
-        let viewport = Viewport::with_physical_size(
-            Size::new(scr_width,scr_height),
-            //todos
-            window.scale_factor(),
-        );
-
+        
         let cursor_position = PhysicalPosition::new(-1.0, -1.0);
         let cli_status = false;
         let cli_flag = false;
@@ -377,6 +370,33 @@ impl State {
             )
         });
 
+        let mut renderer =Renderer::new(Backend::new(&device, Settings::default(), format));
+
+        let mut debug = Debug::new();
+
+        let staging_belt = wgpu::util::StagingBelt::new(5 * 1024);  
+
+        let size = window.inner_size();
+        let viewport = Viewport::with_physical_size(
+            Size::new(scr_width,scr_height),
+            //todos
+            window.scale_factor(),
+        );
+
+
+        let modifiers = ModifiersState::default();
+        let clipboard = Clipboard::connect(&window);
+
+        // Initialize scene and GUI controls
+        let control = Controls::new();
+        // Initialize iced
+        let iced_state = program::State::new(
+            control,
+            viewport.logical_size(),
+            &mut renderer,
+            &mut debug,
+        );
+
         let texture_size = wgpu::Extent3d {
             width: scr_width/2,
             height: scr_height/2,
@@ -392,7 +412,7 @@ impl State {
         };
         surface.configure(&device, &config);
 
-        let renderer =Renderer::new(Backend::new(&device, Settings::default(), format));
+        
 
 
         ///////////////////////////Camera////////////////////////////
@@ -1036,6 +1056,9 @@ impl State {
 
         Self {
 
+            iced_state,
+            modifiers,
+            clipboard,
             staging_belt,
             size,
             cursor_position,
@@ -1363,19 +1386,12 @@ pub async fn run() {
         })
         .expect("Couldn't append canvas to document body.");
     }
-    let mut state = State::new(&window,scr_width,scr_height).await;
-    let mut modifiers = ModifiersState::default();
-    let mut clipboard = Clipboard::connect(&window);
 
-    // Initialize scene and GUI controls
-    let control = Controls::new();
-    // Initialize iced
-    let mut iced_state = program::State::new(
-        control,
-        state.viewport.logical_size(),
-        &mut state.renderer,
-        &mut state.debug,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
-    );
+
+    let mut command_parser = Descriptor::new();
+
+    let mut state = State::new(&window,scr_width,scr_height).await;
+    
     
 
     // State::new uses async code, so we're going to wait for it to finish
@@ -1393,10 +1409,10 @@ pub async fn run() {
 
             winit::event::Event::MainEventsCleared => {
                 // If there are events pending
-                if !iced_state.is_queue_empty() {
+                if !state.iced_state.is_queue_empty() {
                     // We update iced
                     
-                    let _ = iced_state.update(
+                    let _ = state.iced_state.update(
                         state.viewport.logical_size(),
                         conversion::cursor_position(
                             state.cursor_position,
@@ -1410,7 +1426,7 @@ pub async fn run() {
                                 0x01 as f32 / 255.0,
                             ) 
                         },
-                        &mut clipboard,
+                        &mut state.clipboard,
                         &mut state.debug,
                     );  
                 }
@@ -1445,7 +1461,7 @@ pub async fn run() {
                         } => *control_flow = ControlFlow::Exit,
 
                         WindowEvent::ModifiersChanged(new_modifiers) => {
-                            modifiers = *new_modifiers;
+                            state.modifiers = *new_modifiers;
                         }
 
                         WindowEvent::CursorMoved {
@@ -1472,9 +1488,9 @@ pub async fn run() {
                         if let Some(event) = iced_winit::conversion::window_event(
                             &event,
                             window.scale_factor(),
-                            modifiers,
+                            state.modifiers,
                         ) {
-                            iced_state.queue_event(event);
+                            state.iced_state.queue_event(event);
                         }
 
                     }
@@ -1491,23 +1507,34 @@ pub async fn run() {
                 last_render_time = now;
                 state.update(dt);
 
-                iced_state.queue_message(Update);
+                state.iced_state.queue_message(Update);
                 
                 if state.framerate_timer<1.0 {
                     state.framerate_timer += dt.as_secs_f32();
                     state.framerate_count += 1;
                 }
                 else {
-                    iced_state.queue_message(FrameUpdate(state.framerate_count));
+                    state.iced_state.queue_message(FrameUpdate(state.framerate_count));
                     state.framerate_timer = 0.0;
                     state.framerate_count = 1;
                 }
+                
+                if state.iced_state.program().parse_flag {
+
+                    let t = &state.iced_state.program().text;
+                    command_parser.text = t.to_string();
+                    command_parser.parse_command(&mut state);
+
+                    state.iced_state.queue_message(CommandParsed);
+
+                }
+
                 
                 
                 #[cfg(target_arch = "wasm32")]{
                     use web_sys::console;
 
-                    //console::log_1(&t.into());
+                   //console::log_1(&t.into());
                 }
 
                 match state.render() {
@@ -1522,7 +1549,7 @@ pub async fn run() {
 
                 window.set_cursor_icon(
                     iced_winit::conversion::mouse_interaction(
-                        iced_state.mouse_interaction(),//iced_state note
+                        state.iced_state.mouse_interaction(),//state.iced_state note
                     ),
                 );
             }
@@ -1539,8 +1566,11 @@ pub async fn run() {
         }else{
             if a == 33 {
                 state.cli_status = true;
-                iced_state.queue_message(ServerLog("Welcome to ASYMPTOTE Industries (TM) !".to_string()));
-                iced_state.queue_message(ServerLog("Current Version: 1.0.0".to_string()));
+                state.iced_state.queue_message(ServerLog("Welcome to ASYMPTOTE Industries (TM) !".to_string()));
+                state.iced_state.queue_message(ServerLog("Current Version: 1.0.0".to_string()));
+                
+
+
                 //iced enabled && welcome message
             }
             if a>777 {

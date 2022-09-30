@@ -28,6 +28,8 @@ pub struct Uniform {
     _padding:u32,
 }
 
+
+
 impl Uniform {
     pub fn new() -> Self {
         Self {
@@ -35,7 +37,7 @@ impl Uniform {
             _padding: 0,
         }
     }
-
+    //update texture offset
     pub fn update(&mut self,loc_x:f32,loc_y:f32){
 
         self.offset = cgmath::Vector3::new(loc_x,loc_y,0.0).into();
@@ -305,6 +307,7 @@ impl CameraController {
             }
         }
 
+        //pixel glitch fix
         camera.target = camera.position + (self.x_current - self.x_current%1.0) * left + (self.y_current - self.y_current%3.0) * forward;
 
         camera.eye = cgmath::Point3::new(self.pos_x,self.pos_y,self.pos_z)+(
