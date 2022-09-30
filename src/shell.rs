@@ -1,3 +1,4 @@
+use crate::State;
 use iced_wgpu::Renderer;
 use iced_winit::widget::text_input::{TextInput};
 use iced_winit::widget::{Text,Column};
@@ -38,6 +39,10 @@ impl Controls {
             last_render_time: Instant::now(),
             text_column: Default::default(),
         }
+    }
+
+    pub fn update_state(&mut self ,state: &mut State){
+        state.command_parser.text = self.text;
     }
 }
 
