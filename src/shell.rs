@@ -61,7 +61,7 @@ impl Program for Controls {
             
             Message::OnSubmit => {
 
-                self.text_column.push(TextColumn::new(("MigoDrone: ".to_owned() + &self.text).to_string()));
+                self.text_column.push(TextColumn::new(("Admin: ".to_owned() + &self.text).to_string()));
                 self.text = String::from("");
                 
             }

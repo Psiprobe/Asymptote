@@ -511,9 +511,9 @@ impl State {
 
         
         let light_uniform = LightUniform {
-            position: [200.0, 20.0, 200.0],
+            position: [200.0, 300.0, 200.0],
             _padding: 0,
-            color: [0.01, 0.01, 0.01],
+            color: [0.012, 0.02, 0.014],
             _padding2: 0,
         };
         
@@ -562,7 +562,7 @@ impl State {
                 mip_level_count: 1, 
                 sample_count: 1,
                 dimension: wgpu::TextureDimension::D2,
-                format: wgpu::TextureFormat::Rgba8UnormSrgb,//Bgra8UnormSrgb?
+                format: wgpu::TextureFormat::Rgba8UnormSrgb,//Bgra8UnormSrgb? Rgba8UnormSrgb!
                 usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::RENDER_ATTACHMENT,
                 label: Some("diffuse_texture"),
             }
@@ -1208,10 +1208,10 @@ impl State {
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(
                             wgpu::Color {
-                                r: 0.0,
-                                g: 0.0,
-                                b: 0.0,
-                                a: 0.0,
+                                r: 1.0,
+                                g: 1.0,
+                                b: 1.0,
+                                a: 1.0,
                             }
                         ),
                         store: true,
