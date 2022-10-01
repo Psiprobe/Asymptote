@@ -18,7 +18,8 @@ pub struct Controls {
     pub text: String,
     pub fps: i32,
     pub last_render_time: Instant,
-    pub text_column:Vec<TextColumn>,
+    pub text_column: Vec<TextColumn>,
+    pub parse_flag: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -28,6 +29,8 @@ pub enum Message {
     FrameUpdate(i32),
     Update,
     ServerLog(String),
+    CommandParsed,
+    ChatMessage,
 }
 
 impl Controls {
@@ -37,6 +40,7 @@ impl Controls {
             fps: 0,
             last_render_time: Instant::now(),
             text_column: Default::default(),
+            parse_flag: false,
         }
     }
 }
@@ -55,13 +59,11 @@ impl Program for Controls {
             }
             
             Message::OnSubmit => {
-
-                self.text_column.push(TextColumn::new(("Admin: ".to_owned() + &self.text).to_string()));
-                self.text = String::from("");
-                
+                self.parse_flag = true;
             }
             
-            Message::FrameUpdate(fps) =>{
+            
+            Message::FrameUpdate(fps) => {
                 self.fps = fps;
                 for x in self.text_column.iter_mut() {
                     x.timer -= 1.0;
@@ -82,6 +84,14 @@ impl Program for Controls {
             Message::ServerLog(text) => {
                 self.text_column.push(TextColumn::new(text));
             }
+            Message::CommandParsed => {
+                self.text = String::from("");
+                self.parse_flag = false;
+            }
+            Message::ChatMessage =>{
+                self.text_column.push(TextColumn::new(("Admin: ".to_owned() + &self.text).to_string()));
+            }
+
         }
 
         Command::none()
