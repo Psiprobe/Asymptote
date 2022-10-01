@@ -551,18 +551,33 @@ impl State {
 
 
 
-        let diffuse_texture = device.create_texture(
+        let mut diffuse_texture = device.create_texture(
             &wgpu::TextureDescriptor {
                 
                 size: texture_size,
                 mip_level_count: 1, 
                 sample_count: 1,
                 dimension: wgpu::TextureDimension::D2,
-                format: wgpu::TextureFormat::Rgba8UnormSrgb,//Bgra8UnormSrgb? Rgba8UnormSrgb!
+                format: wgpu::TextureFormat::Bgra8UnormSrgb,//Bgra8UnormSrgb? Rgba8UnormSrgb!
                 usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::RENDER_ATTACHMENT,
                 label: Some("diffuse_texture"),
             }
         );
+
+        #[cfg(target_arch = "wasm32")]{
+            diffuse_texture = device.create_texture(
+                &wgpu::TextureDescriptor {
+                    
+                    size: texture_size,
+                    mip_level_count: 1, 
+                    sample_count: 1,
+                    dimension: wgpu::TextureDimension::D2,
+                    format: wgpu::TextureFormat::Rgba8UnormSrgb,//Bgra8UnormSrgb? Rgba8UnormSrgb!
+                    usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::RENDER_ATTACHMENT,
+                    label: Some("diffuse_texture"),
+                }
+            );
+        }
 
         let depth_texture = device.create_texture(
             &wgpu::TextureDescriptor {
