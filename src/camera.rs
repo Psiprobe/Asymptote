@@ -38,11 +38,13 @@ impl Uniform {
         }
     }
     //update texture offset
+    /* 
     pub fn update(&mut self,loc_x:f32,loc_y:f32){
 
         self.offset = cgmath::Vector3::new(loc_x,loc_y,0.0).into();
 
     }
+    */
 }
 
 #[repr(C)]

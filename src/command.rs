@@ -17,11 +17,13 @@ impl Descriptor{
         let first = s.chars().nth(0);
         if  first == Some('/') {
             match &s as &str{
-                "/test"=>{
+                "/normal_texture"=>{
 
-                    s = String::from("Test successed");
+                    state.normal_texture_flag = !state.normal_texture_flag;
+                    s = String::from("Texture changed");
 
                 }
+
                 _=>{
                     s = String::from("Fail to parse command");
                 }
