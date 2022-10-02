@@ -316,6 +316,8 @@ pub struct State {
 impl State {
     async fn new(window: &Window,scr_width:u32,scr_height:u32) -> Self {
 
+        let command_parser = Descriptor::new();
+
         let framerate_timer = 0.0;
         let framerate_count = 1;
         // Initialize staging belt
@@ -384,13 +386,13 @@ impl State {
         );
 
 
-        let modifiers = ModifiersState::default();
-        let clipboard = Clipboard::connect(&window);
+        let mut modifiers = ModifiersState::default();
+        let mut clipboard = Clipboard::connect(&window);
 
         // Initialize scene and GUI controls
         let control = Controls::new();
         // Initialize iced
-        let iced_state = program::State::new(
+        let mut iced_state = program::State::new(
             control,
             viewport.logical_size(),
             &mut renderer,
@@ -1526,7 +1528,7 @@ pub async fn run() {
                     command_parser.parse_command(&mut state);
 
                     state.iced_state.queue_message(CommandParsed);
-
+                    
                 }
 
                 
