@@ -17,9 +17,27 @@ impl Descriptor{
         let first = s.chars().nth(0);
         if  first == Some('/') {
             match &s as &str{
-                "/normal_texture"=>{
 
-                    state.normal_texture_flag = !state.normal_texture_flag;
+                
+                "/normal"=>{
+                    state.diffuse_texture_flag = false;
+                    state.normal_texture_flag = true;
+                    state.depth_texture_flag = false;
+                    s = String::from("Texture changed");
+                }
+
+                "/depth"=>{
+                    state.diffuse_texture_flag = false;
+                    state.normal_texture_flag = false;
+                    state.depth_texture_flag = true;
+                    s = String::from("Texture changed");
+
+                }
+
+                "/diffuse"=>{
+                    state.diffuse_texture_flag = true;
+                    state.normal_texture_flag = false;
+                    state.depth_texture_flag = false;
                     s = String::from("Texture changed");
 
                 }

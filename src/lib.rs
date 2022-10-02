@@ -274,6 +274,7 @@ pub struct State {
 
     render_pipeline: wgpu::RenderPipeline,
     render_quad_pipeline: wgpu::RenderPipeline,
+    render_depth_quad_pipeline: wgpu::RenderPipeline,
     render_line_pipeline: wgpu::RenderPipeline,
     render_line_normal_pipeline: wgpu::RenderPipeline,
     render_triangle_pipeline: wgpu::RenderPipeline,
@@ -303,17 +304,23 @@ pub struct State {
     light_buffer: wgpu::Buffer,
     light_bind_group: wgpu::BindGroup,
 
+
+    texture_size:wgpu::Extent3d,
     //diffuse_texture:wgpu::Texture,
-    //depth_texture:wgpu::Texture,
+    depth_texture:wgpu::Texture,
     //normal_texture:wgpu::Texture,
 
     diffuse_bind_group: wgpu::BindGroup,
     depth_bind_group: wgpu::BindGroup,
     normal_bind_group: wgpu::BindGroup,
 
+    depth_texture_bind_group_layout: wgpu::BindGroupLayout,
+
     diffuse_texture_view:wgpu::TextureView,
     depth_texture_view:wgpu::TextureView,
     normal_texture_view:wgpu::TextureView,
+
+    depth_sampler:wgpu::Sampler,
 
     instances: Vec<Instance>,
     instance_buffer: wgpu::Buffer,
@@ -326,12 +333,17 @@ pub struct State {
     framerate_count: i32,
 
     normal_texture_flag: bool,
+    diffuse_texture_flag: bool,
+    depth_texture_flag: bool,
     cli_flag: bool,
 }
 impl State {
     async fn new(window: &Window,scr_width:u32,scr_height:u32) -> Self {
 
+        
         let normal_texture_flag = false;
+        let depth_texture_flag = false;
+        let diffuse_texture_flag = true;
 
         let framerate_timer = 0.0;
         let framerate_count = 1;
@@ -665,10 +677,10 @@ impl State {
                 address_mode_u: wgpu::AddressMode::ClampToEdge,
                 address_mode_v: wgpu::AddressMode::ClampToEdge,
                 address_mode_w: wgpu::AddressMode::ClampToEdge,
-                mag_filter: wgpu::FilterMode::Linear,
-                min_filter: wgpu::FilterMode::Linear,
+                mag_filter: wgpu::FilterMode::Nearest,
+                min_filter: wgpu::FilterMode::Nearest,
                 mipmap_filter: wgpu::FilterMode::Nearest,
-                compare: None, // 5.
+                compare: Some(wgpu::CompareFunction::LessEqual), 
                 lod_min_clamp: -100.0,
                 lod_max_clamp: 100.0,
                 ..Default::default()
@@ -704,6 +716,34 @@ impl State {
 
 
 
+
+        let depth_texture_bind_group_layout =
+        device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("Depth Pass Layout"),
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    count: None,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Depth,
+                        multisampled: false,
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                    },
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    count: None,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Comparison),
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                },
+            ],
+        });
+
+
+
+
+
         let diffuse_bind_group = device.create_bind_group(
             &wgpu::BindGroupDescriptor {
                 layout: &texture_bind_group_layout,
@@ -723,7 +763,7 @@ impl State {
 
         let depth_bind_group = device.create_bind_group(
             &wgpu::BindGroupDescriptor {
-                layout: &texture_bind_group_layout,
+                layout: &depth_texture_bind_group_layout,
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
@@ -808,24 +848,28 @@ impl State {
             label: Some("QuadShader"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/quad_shader.wgsl").into()),
         });
+        let depth_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("QuadShader"),
+            source: wgpu::ShaderSource::Wgsl(include_str!("shaders/depth_shader.wgsl").into()),
+        });
 
         let line_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("LightShader"),
+            label: Some("LineShader"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/line_shader/line_shader.wgsl").into()),
         });
 
         let triangle_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("CenterShader"),
+            label: Some("TriangleShader"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/triangle_shader/triangle_shader.wgsl").into()),
         });
 
         let line_shader_normal = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("LineShader"),
+            label: Some("LineShader_normal"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/line_shader/line_shader_normal.wgsl").into()),
         });
 
         let triangle_shader_normal = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("TriangleShader"),
+            label: Some("TriangleShader_normal"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/triangle_shader/triangle_shader_normal.wgsl").into()),
         });
 
@@ -879,6 +923,17 @@ impl State {
                 label: Some("Render Pipeline Layout"),
                 bind_group_layouts: &[
                     &texture_bind_group_layout,
+                    &uniform_bind_group_layout,
+                ],
+                push_constant_ranges: &[],
+            }
+        );
+
+        let render_depth_pipeline_layout = device.create_pipeline_layout(
+            &wgpu::PipelineLayoutDescriptor {
+                label: Some("Render Pipeline Layout"),
+                bind_group_layouts: &[
+                    &depth_texture_bind_group_layout,
                     &uniform_bind_group_layout,
                 ],
                 push_constant_ranges: &[],
@@ -1017,6 +1072,45 @@ impl State {
 
             depth_stencil: None,
 
+            multisample: wgpu::MultisampleState {
+                count: 1,
+                mask: !0,
+                alpha_to_coverage_enabled: false,
+            },
+            multiview: None,
+        });
+
+        let render_depth_quad_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+
+            label: Some("Depth Pass Render Pipeline"),
+            layout: Some(&render_depth_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &depth_shader,
+                entry_point: "vs_main",
+                buffers: &[Vertex_tex::desc()],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &depth_shader,
+                entry_point: "fs_main",
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: config.format,
+                    blend: Some(wgpu::BlendState {
+                        color: wgpu::BlendComponent::REPLACE,
+                        alpha: wgpu::BlendComponent::REPLACE,
+                    }),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                strip_index_format: None,
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: Some(wgpu::Face::Front),
+                polygon_mode: wgpu::PolygonMode::Fill,
+                unclipped_depth: false,
+                conservative: false,
+            },
+            depth_stencil: None,
             multisample: wgpu::MultisampleState {
                 count: 1,
                 mask: !0,
@@ -1292,6 +1386,7 @@ impl State {
 
             render_pipeline,
             render_quad_pipeline,
+            render_depth_quad_pipeline,
             render_line_pipeline,
             render_triangle_pipeline,
             render_line_normal_pipeline,
@@ -1320,17 +1415,22 @@ impl State {
             light_buffer,
             light_bind_group,
 
+            texture_size,
             //diffuse_texture,
-            //depth_texture,
+            depth_texture,
             //normal_texture,
             
             diffuse_bind_group,
             depth_bind_group,
             normal_bind_group,
 
+            depth_texture_bind_group_layout,
+
             diffuse_texture_view,
             depth_texture_view,
             normal_texture_view,
+
+            depth_sampler,
 
             instances,
             instance_buffer,
@@ -1344,6 +1444,8 @@ impl State {
 
             cli_flag,
             normal_texture_flag,
+            diffuse_texture_flag,
+            depth_texture_flag,
 
         }
 
@@ -1354,6 +1456,33 @@ impl State {
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+        self.depth_texture = self.device.create_texture(
+            &wgpu::TextureDescriptor {
+                
+                size: self.texture_size,
+                mip_level_count: 1, 
+                sample_count: 1,
+                dimension: wgpu::TextureDimension::D2,
+                format: wgpu::TextureFormat::Depth32Float,
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT
+                | wgpu::TextureUsages::TEXTURE_BINDING,
+                label: Some("depth_texture"),
+            }
+        );
+        self.depth_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &self.depth_texture_bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&self.depth_texture_view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::Sampler(&self.depth_sampler),
+                },
+            ],
+            label: Some("depth_pass.bind_group"),
+        });
         if new_size.width > 0 && new_size.height > 0 {
 
             self.config.width = new_size.width;
@@ -1562,13 +1691,19 @@ impl State {
             });
 
         
-            render_pass.set_pipeline(&self.render_quad_pipeline);
+           
 
-            if !self.normal_texture_flag {
-                render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
-            } 
-            else {
+            if self.normal_texture_flag {
+                render_pass.set_pipeline(&self.render_quad_pipeline);
                 render_pass.set_bind_group(0, &self.normal_bind_group, &[]);
+            } 
+            else if self.depth_texture_flag {
+                render_pass.set_pipeline(&self.render_depth_quad_pipeline);
+                render_pass.set_bind_group(0, &self.depth_bind_group, &[]);
+            }
+            else if self.diffuse_texture_flag {
+                render_pass.set_pipeline(&self.render_quad_pipeline);
+                render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
             }
 
 
