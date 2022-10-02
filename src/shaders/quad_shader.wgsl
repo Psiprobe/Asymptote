@@ -17,8 +17,8 @@ struct VertexOutput {
 @vertex
 fn vs_main(
     model: VertexInput,
-    
 ) -> VertexOutput {
+    
     var out: VertexOutput;
 
     let x = model.position + data.offset;
