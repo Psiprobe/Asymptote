@@ -64,47 +64,47 @@ const VERTICES_CUBE: &[Vertex] = &[
 ];                  
                     
 const VERTICES_CENTER: &[Vertex] = &[                   
-    Vertex { position: [10.0,  -100.0,  50.0],  color: [0.012, 0.02, 0.014, 1.0],   normal: [1.0, 0.0, 0.0],  },
-    Vertex { position: [10.0,  -100.0, -50.0],  color: [0.012, 0.02, 0.014, 1.0],   normal: [1.0, 0.0, 0.0],  },
-    Vertex { position: [10.0,  200.0, 50.0],    color: [0.012, 0.02, 0.014, 1.0],   normal: [1.0, 0.0, 0.0],  },
-    Vertex { position: [10.0,  -100.0,  -50.0], color: [0.012, 0.02, 0.014, 1.0],   normal: [1.0, 0.0, 0.0],  },
-    Vertex { position: [10.0, 200.0,  50.0],    color: [0.012, 0.02, 0.014, 1.0],   normal: [1.0, 0.0, 0.0],  },
-    Vertex { position: [10.0,  200.0, -50.0],   color: [0.012, 0.02, 0.014, 1.0],   normal: [1.0, 0.0, 0.0],  },
+    Vertex { position: [10.0,  -100.0,  50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [1.0, 0.0, 0.0],  },
+    Vertex { position: [10.0,  -100.0, -50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [1.0, 0.0, 0.0],  },
+    Vertex { position: [10.0,  200.0, 50.0],    color: [0.012, 0.02, 0.014, 0.7],   normal: [1.0, 0.0, 0.0],  },
+    Vertex { position: [10.0,  -100.0,  -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [1.0, 0.0, 0.0],  },
+    Vertex { position: [10.0, 200.0,  50.0],    color: [0.012, 0.02, 0.014, 0.7],   normal: [1.0, 0.0, 0.0],  },
+    Vertex { position: [10.0,  200.0, -50.0],   color: [0.012, 0.02, 0.014, 0.7],   normal: [1.0, 0.0, 0.0],  },
 
-    Vertex { position: [-10.0,  -100.0,  50.0], color: [0.012, 0.02, 0.014, 1.0],   normal: [-1.0, 0.0, 0.0], },
-    Vertex { position: [-10.0,  -100.0, -50.0], color: [0.012, 0.02, 0.014, 1.0],   normal: [-1.0, 0.0, 0.0], },
-    Vertex { position: [-10.0,  200.0, 50.0],   color: [0.012, 0.02, 0.014, 1.0],   normal: [-1.0, 0.0, 0.0], },
-    Vertex { position: [-10.0,  -100.0,  -50.0],color: [0.012, 0.02, 0.014, 1.0],   normal: [-1.0, 0.0, 0.0], },
-    Vertex { position: [-10.0, 200.0,  50.0],   color: [0.012, 0.02, 0.014, 1.0],   normal: [-1.0, 0.0, 0.0], },
-    Vertex { position: [-10.0,  200.0, -50.0],  color: [0.012, 0.02, 0.014, 1.0],   normal: [-1.0, 0.0, 0.0], },
+    Vertex { position: [-10.0,  -100.0,  50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [-1.0, 0.0, 0.0], },
+    Vertex { position: [-10.0,  -100.0, -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [-1.0, 0.0, 0.0], },
+    Vertex { position: [-10.0,  200.0, 50.0],   color: [0.012, 0.02, 0.014, 0.7],   normal: [-1.0, 0.0, 0.0], },
+    Vertex { position: [-10.0,  -100.0,  -50.0],color: [0.012, 0.02, 0.014, 0.7],   normal: [-1.0, 0.0, 0.0], },
+    Vertex { position: [-10.0, 200.0,  50.0],   color: [0.012, 0.02, 0.014, 0.7],   normal: [-1.0, 0.0, 0.0], },
+    Vertex { position: [-10.0,  200.0, -50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [-1.0, 0.0, 0.0], },
   
-    Vertex { position: [-10.0,  -100.0, 50.0],  color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 0.0, 1.0],  },
-    Vertex { position: [10.0,  -100.0,  50.0],  color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 0.0, 1.0],  },
-    Vertex { position: [-10.0,  200.0,  50.0],  color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 0.0, 1.0],  },
-    Vertex { position: [10.0,  -100.0, 50.0],   color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 0.0, 1.0],  },
-    Vertex { position: [-10.0, 200.0,   50.0],  color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 0.0, 1.0],  },
-    Vertex { position: [10.0,  200.0,  50.0],   color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 0.0, 1.0],  },
+    Vertex { position: [-10.0,  -100.0, 50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, 1.0],  },
+    Vertex { position: [10.0,  -100.0,  50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, 1.0],  },
+    Vertex { position: [-10.0,  200.0,  50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, 1.0],  },
+    Vertex { position: [10.0,  -100.0, 50.0],   color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, 1.0],  },
+    Vertex { position: [-10.0, 200.0,   50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, 1.0],  },
+    Vertex { position: [10.0,  200.0,  50.0],   color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, 1.0],  },
 
-    Vertex { position: [-10.0,  -100.0, -50.0], color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 0.0, -1.0], },
-    Vertex { position: [10.0,  -100.0,  -50.0], color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 0.0, -1.0], },
-    Vertex { position: [-10.0,  200.0,  -50.0], color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 0.0, -1.0], },
-    Vertex { position: [10.0,  -100.0, -50.0],  color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 0.0, -1.0], },
-    Vertex { position: [-10.0, 200.0,   -50.0], color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 0.0, -1.0], },
-    Vertex { position: [10.0,  200.0,  -50.0],  color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 0.0, -1.0], },
+    Vertex { position: [-10.0,  -100.0, -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, -1.0], },
+    Vertex { position: [10.0,  -100.0,  -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, -1.0], },
+    Vertex { position: [-10.0,  200.0,  -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, -1.0], },
+    Vertex { position: [10.0,  -100.0, -50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, -1.0], },
+    Vertex { position: [-10.0, 200.0,   -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, -1.0], },
+    Vertex { position: [10.0,  200.0,  -50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, -1.0], },
 
-    Vertex { position: [-10.0,  200.0, 50.0],   color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 1.0, 0.0],  },
-    Vertex { position: [10.0,   200.0,  50.0],  color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 1.0, 0.0],  },
-    Vertex { position: [-10.0,  200.0,  -50.0], color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 1.0, 0.0],  },
-    Vertex { position: [10.0,  200.0, 50.0],    color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 1.0, 0.0],  },
-    Vertex { position: [-10.0, 200.0,   -50.0], color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 1.0, 0.0],  },
-    Vertex { position: [10.0,  200.0,  -50.0],  color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, 1.0, 0.0],  },
+    Vertex { position: [-10.0,  200.0, 50.0],   color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 1.0, 0.0],  },
+    Vertex { position: [10.0,   200.0,  50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 1.0, 0.0],  },
+    Vertex { position: [-10.0,  200.0,  -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 1.0, 0.0],  },
+    Vertex { position: [10.0,  200.0, 50.0],    color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 1.0, 0.0],  },
+    Vertex { position: [-10.0, 200.0,   -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 1.0, 0.0],  },
+    Vertex { position: [10.0,  200.0,  -50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 1.0, 0.0],  },
  
-    Vertex { position: [-10.0,  -100.0, 50.0],  color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, -1.0, -0.0],},
-    Vertex { position: [10.0,  -100.0,  50.0],  color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, -1.0, -0.0],},
-    Vertex { position: [-10.0,  -100.0,  -50.0],color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, -1.0, -0.0],},
-    Vertex { position: [10.0,  -100.0, 50.0],   color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, -1.0, -0.0],},
-    Vertex { position: [-10.0, -100.0,   -50.0],color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, -1.0, -0.0],},
-    Vertex { position: [10.0,  -100.0,  -50.0], color: [0.012, 0.02, 0.014, 1.0],   normal: [0.0, -1.0, -0.0],},
+    Vertex { position: [-10.0,  -100.0, 50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, -1.0, -0.0],},
+    Vertex { position: [10.0,  -100.0,  50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, -1.0, -0.0],},
+    Vertex { position: [-10.0,  -100.0,  -50.0],color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, -1.0, -0.0],},
+    Vertex { position: [10.0,  -100.0, 50.0],   color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, -1.0, -0.0],},
+    Vertex { position: [-10.0, -100.0,   -50.0],color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, -1.0, -0.0],},
+    Vertex { position: [10.0,  -100.0,  -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, -1.0, -0.0],},
     
 ];
 
@@ -176,7 +176,7 @@ impl Vertex_tex {
 
 
 
-const NUM_INSTANCES_PER_ROW: i32 = 500;
+const NUM_INSTANCES_PER_ROW: i32 = 100;
 
 
 struct Instance {
@@ -275,6 +275,7 @@ pub struct State {
     render_pipeline: wgpu::RenderPipeline,
     render_quad_pipeline: wgpu::RenderPipeline,
     render_depth_quad_pipeline: wgpu::RenderPipeline,
+    render_normal_diffuse_quad_pipeline: wgpu::RenderPipeline,
     render_line_pipeline: wgpu::RenderPipeline,
     render_line_normal_pipeline: wgpu::RenderPipeline,
     render_triangle_pipeline: wgpu::RenderPipeline,
@@ -335,6 +336,7 @@ pub struct State {
     normal_texture_flag: bool,
     diffuse_texture_flag: bool,
     depth_texture_flag: bool,
+    output_texture_flag: bool,
     cli_flag: bool,
 }
 impl State {
@@ -343,7 +345,8 @@ impl State {
         
         let normal_texture_flag = false;
         let depth_texture_flag = false;
-        let diffuse_texture_flag = true;
+        let diffuse_texture_flag = false;
+        let output_texture_flag = true;
 
         let framerate_timer = 0.0;
         let framerate_count = 1;
@@ -353,8 +356,7 @@ impl State {
         let cli_status = false;
         let cli_flag = false;
         #[cfg(target_arch = "wasm32")]
-        //let default_backend = wgpu::Backends::PRIMARY;
-        let default_backend = wgpu::Backends::PRIMARY;
+        let default_backend = wgpu::Backends::GL;
         #[cfg(not(target_arch = "wasm32"))]
         let default_backend = wgpu::Backends::PRIMARY;
 
@@ -375,8 +377,9 @@ impl State {
             let adapter_features = adapter.features();
         
             #[cfg(target_arch = "wasm32")]
-            //let needed_limits = wgpu::Limits::downlevel_webgl2_defaults().using_resolution(adapter.limits());
-            let needed_limits = wgpu::Limits::default();
+            let needed_limits = wgpu::Limits::downlevel_webgl2_defaults()
+                .using_resolution(adapter.limits());
+        
             #[cfg(not(target_arch = "wasm32"))]
             let needed_limits = wgpu::Limits::default();
         
@@ -680,9 +683,7 @@ impl State {
                 mag_filter: wgpu::FilterMode::Nearest,
                 min_filter: wgpu::FilterMode::Nearest,
                 mipmap_filter: wgpu::FilterMode::Nearest,
-                compare: None, 
-                lod_min_clamp: -100.0,
-                lod_max_clamp: 100.0,
+                compare: Some(wgpu::CompareFunction::LessEqual), 
                 ..Default::default()
             }
         );
@@ -733,9 +734,9 @@ impl State {
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 1,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
                     count: None,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Comparison),
+                    visibility: wgpu::ShaderStages::FRAGMENT,
                 },
             ],
         });
@@ -844,15 +845,6 @@ impl State {
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/terrain_shader.wgsl").into()),
         });
 
-        let quad_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("QuadShader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("shaders/quad_shader.wgsl").into()),
-        });
-        let depth_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("QuadShader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("shaders/depth_shader.wgsl").into()),
-        });
-
         let line_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("LineShader"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/line_shader/line_shader.wgsl").into()),
@@ -871,6 +863,21 @@ impl State {
         let triangle_shader_normal = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("TriangleShader_normal"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/triangle_shader/triangle_shader_normal.wgsl").into()),
+        });
+
+        let depth_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("QuadShader"),
+            source: wgpu::ShaderSource::Wgsl(include_str!("shaders/depth_shader.wgsl").into()),
+        });
+
+        let normal_diffuse_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("SelectiveQuadShader"),
+            source: wgpu::ShaderSource::Wgsl(include_str!("shaders/normal_diffuse_shader.wgsl").into()),
+        });
+        
+        let output_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("QuadShader"),
+            source: wgpu::ShaderSource::Wgsl(include_str!("shaders/quad_shader.wgsl").into()),
         });
 
 
@@ -919,6 +926,19 @@ impl State {
         });
 
         let render_quad_pipeline_layout = device.create_pipeline_layout(
+            &wgpu::PipelineLayoutDescriptor {
+                label: Some("Render Pipeline Layout"),
+                bind_group_layouts: &[
+                    &texture_bind_group_layout,
+                    &uniform_bind_group_layout,
+                    &texture_bind_group_layout,
+                    &depth_texture_bind_group_layout,
+                ],
+                push_constant_ranges: &[],
+            }
+        );
+
+        let render_selective_quad_pipeline_layout = device.create_pipeline_layout(
             &wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
                 bind_group_layouts: &[
@@ -1039,13 +1059,60 @@ impl State {
             layout: Some(&render_quad_pipeline_layout),
 
             vertex: wgpu::VertexState {
-                module: &quad_shader,
+                module: &output_shader,
                 entry_point: "vs_main",
                 buffers: &[Vertex_tex::desc()],
             },
 
             fragment: Some(wgpu::FragmentState {
-                module: &quad_shader,
+                module: &output_shader,
+                entry_point: "fs_main",
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: config.format,
+                    blend: Some(wgpu::BlendState {
+                        color: wgpu::BlendComponent::REPLACE,
+                        alpha: wgpu::BlendComponent::REPLACE,
+                    }),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+
+
+            primitive: wgpu::PrimitiveState {
+
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                strip_index_format: None,
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: Some(wgpu::Face::Front),
+                polygon_mode: wgpu::PolygonMode::Fill,
+                unclipped_depth: false,
+                conservative: false,
+
+            },
+
+            depth_stencil: None,
+
+            multisample: wgpu::MultisampleState {
+                count: 1,
+                mask: !0,
+                alpha_to_coverage_enabled: false,
+            },
+            multiview: None,
+        });
+
+        let render_normal_diffuse_quad_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+
+            label: Some("Render Texture Pipeline"),
+            layout: Some(&render_selective_quad_pipeline_layout),
+
+            vertex: wgpu::VertexState {
+                module: &normal_diffuse_shader,
+                entry_point: "vs_main",
+                buffers: &[Vertex_tex::desc()],
+            },
+
+            fragment: Some(wgpu::FragmentState {
+                module: &normal_diffuse_shader,
                 entry_point: "fs_main",
                 targets: &[Some(wgpu::ColorTargetState {
                     format: config.format,
@@ -1386,10 +1453,12 @@ impl State {
 
             render_pipeline,
             render_quad_pipeline,
+            render_normal_diffuse_quad_pipeline,
             render_depth_quad_pipeline,
             render_line_pipeline,
             render_triangle_pipeline,
             render_line_normal_pipeline,
+            
             render_triangle_normal_pipeline,
 
             vertex_buffer,
@@ -1446,6 +1515,7 @@ impl State {
             normal_texture_flag,
             diffuse_texture_flag,
             depth_texture_flag,
+            output_texture_flag,
 
         }
 
@@ -1691,22 +1761,26 @@ impl State {
             });
 
         
-           
-
-            if self.normal_texture_flag {
+            if self.output_texture_flag {
                 render_pass.set_pipeline(&self.render_quad_pipeline);
+                render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
+                render_pass.set_bind_group(2, &self.normal_bind_group, &[]);
+                render_pass.set_bind_group(3, &self.depth_bind_group, &[]);
+            }
+
+            else if self.normal_texture_flag {
+                render_pass.set_pipeline(&self.render_normal_diffuse_quad_pipeline);
                 render_pass.set_bind_group(0, &self.normal_bind_group, &[]);
             } 
+            else if self.diffuse_texture_flag{
+                render_pass.set_pipeline(&self.render_normal_diffuse_quad_pipeline);
+                render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
+            }
             else if self.depth_texture_flag {
                 render_pass.set_pipeline(&self.render_depth_quad_pipeline);
                 render_pass.set_bind_group(0, &self.depth_bind_group, &[]);
             }
-            else if self.diffuse_texture_flag {
-                render_pass.set_pipeline(&self.render_quad_pipeline);
-                render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
-            }
-
-
+            
             render_pass.set_bind_group(1, &self.uniform_bind_group, &[]);
 
             render_pass.set_vertex_buffer(0, self.vertex_tex_buffer.slice(..));

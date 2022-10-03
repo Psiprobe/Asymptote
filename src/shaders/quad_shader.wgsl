@@ -35,7 +35,45 @@ var t_diffuse: texture_2d<f32>;
 @group(0)@binding(1)
 var s_diffuse: sampler;
 
+@group(2)@binding(0)
+var t_normal: texture_2d<f32>;
+@group(2)@binding(1)
+var s_normal: sampler;
+
+@group(3) @binding(0)
+var t_depth: texture_depth_2d;
+@group(3)@binding(1)
+var s_depth: sampler_comparison;
+
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    return textureSample(t_diffuse, s_diffuse, in.tex_coords);
+    let depth = textureSampleCompare(t_depth, s_depth, in.tex_coords,0.3);
+    let normal = textureSample(t_normal, s_normal, in.tex_coords);
+    let normal_left = textureSample(t_normal, s_normal, in.tex_coords,vec2<i32>(0,1));
+    let normal_right = textureSample(t_normal, s_normal, in.tex_coords,vec2<i32>(0,-1));
+    let normal_down = textureSample(t_normal, s_normal, in.tex_coords,vec2<i32>(-1,0));
+    let normal_up = textureSample(t_normal, s_normal, in.tex_coords,vec2<i32>(-1,0));
+    
+    let diffuse = textureSample(t_diffuse, s_diffuse, in.tex_coords);
+    
+    if(normal.x != normal_left.x || normal.y != normal_left.y ||normal.z != normal_left.z){
+        return diffuse+diffuse;
+    }
+    else if(normal.x != normal_down.x|| normal.y != normal_down.y||normal.z != normal_down.z){
+        return diffuse * 5.0;
+
+    }
+    else {
+        return diffuse;
+    }
+    
+    //else if(normal.x != normal_down.x|| normal.y != normal_down.y||normal.z != normal_down.z){
+       // return vec4<f32>(1.0,1.0,1.0,1.0);
+
+    //}
+    //else if(normal.x != normal_right.x|| normal.y != normal_right.y||normal.z != normal_right.z){
+        //return vec4<f32>(1.0,1.0,1.0,1.0);
+
+    //}
+
 }
