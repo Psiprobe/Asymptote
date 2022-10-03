@@ -353,7 +353,8 @@ impl State {
         let cli_status = false;
         let cli_flag = false;
         #[cfg(target_arch = "wasm32")]
-        let default_backend = wgpu::Backends::GL;
+        //let default_backend = wgpu::Backends::PRIMARY;
+        let default_backend = wgpu::Backends::PRIMARY;
         #[cfg(not(target_arch = "wasm32"))]
         let default_backend = wgpu::Backends::PRIMARY;
 
@@ -374,9 +375,8 @@ impl State {
             let adapter_features = adapter.features();
         
             #[cfg(target_arch = "wasm32")]
-            let needed_limits = wgpu::Limits::downlevel_webgl2_defaults()
-                .using_resolution(adapter.limits());
-        
+            //let needed_limits = wgpu::Limits::downlevel_webgl2_defaults().using_resolution(adapter.limits());
+            let needed_limits = wgpu::Limits::default();
             #[cfg(not(target_arch = "wasm32"))]
             let needed_limits = wgpu::Limits::default();
         
@@ -680,7 +680,7 @@ impl State {
                 mag_filter: wgpu::FilterMode::Nearest,
                 min_filter: wgpu::FilterMode::Nearest,
                 mipmap_filter: wgpu::FilterMode::Nearest,
-                compare: Some(wgpu::CompareFunction::LessEqual), 
+                compare: None, 
                 lod_min_clamp: -100.0,
                 lod_max_clamp: 100.0,
                 ..Default::default()
@@ -733,9 +733,9 @@ impl State {
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 1,
-                    count: None,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Comparison),
                     visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                    count: None,
                 },
             ],
         });

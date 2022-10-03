@@ -29,14 +29,14 @@ fn vs_main(
 @group(0) @binding(0)
 var t_shadow: texture_depth_2d;
 @group(0)@binding(1)
-var s_shadow: sampler_comparison;
+var s_shadow: sampler;
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let near = 100.0;
-    let far = 500.0;
-    let depth = textureSampleCompare(t_shadow, s_shadow, in.tex_coords, 1.0);
-    let r = (2.0 * near) / (far + near - depth * (far - near));
-    return vec4<f32>(vec3<f32>(r), 1.0);
-    //return textureSample(t_shadow, s_shadow, in.tex_coords);
+    let far = 5000.0;
+    let depthSample = textureSample(t_shadow, s_shadow, in.tex_coords);
+    //let depthSample = (depthSample + 1.0) / 2.0;
+    let r = (2.0 * near) / (far + near - depthSample * (far - near));
+    return vec4<f32>(vec3<f32>(depthSample),1.0);
 }
