@@ -19,7 +19,6 @@ struct VertexInput {
 
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
-    @location(0) color: vec4<f32>,
 };
 
 @vertex
@@ -28,8 +27,6 @@ fn vs_main(
 ) -> VertexOutput {
     var out: VertexOutput;
     out.clip_position = camera.view_proj * vec4<f32>(model.position, 1.0);
-    out.color = vec4<f32>((model.normal[0]+1.0)/2.0,(model.normal[1]+1.0)/2.0,(model.normal[2]+1.0)/2.0,1.0);
-    
     return out;
 }
 
@@ -37,5 +34,6 @@ fn vs_main(
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    return vec4<f32>(in.color);
+    let normalized_depth = in.clip_position.z * in.clip_position.z * 8.333 - 0.13; 
+    return vec4<f32>(vec3<f32>(normalized_depth),1.0);
 }
