@@ -3,6 +3,12 @@ struct CameraUniform {
 };
 @group(0)@binding(0)
 var<uniform> camera: CameraUniform;
+struct Light {
+    position: vec3<f32>,
+    flag: vec3<f32>,
+}
+@group(1) @binding(0)
+var<uniform> light: Light;
 
 struct VertexInput {
     @location(0) position: vec3<f32>,
@@ -38,14 +44,12 @@ fn vs_main(
     var out: VertexOutput;
     
     out.clip_position =  camera.view_proj * model_matrix *vec4<f32>(model.position, 1.0);
+    let light_dir = normalize(light.position - (model_matrix *vec4<f32>(model.position, 1.0)).xyz);
+    var diffuse_strength = max(dot(model.normal, light_dir),0.0);
+    let rgb_color = vec3<f32>(model.color[0],model.color[1],model.color[2]);
+    let diffuse_color = rgb_color *  diffuse_strength * diffuse_strength * diffuse_strength;
 
-    //when flag is on, render to normal texture
-    if (model.color[0] == 0.0){
-        out.color = model.color;
-    }
-    else{
-        out.color = vec4<f32>(model.normal[0],model.normal[1],model.normal[2],1.0);
-    }
+    out.color = vec4<f32>(diffuse_color[0],diffuse_color[1],diffuse_color[2],model.color[3]);
     return out;
 }
 

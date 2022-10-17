@@ -1,6 +1,7 @@
 mod camera;
 mod shell;
 mod command;
+mod geometry_lib;
 
 use cgmath::Rotation3;
 
@@ -50,61 +51,86 @@ struct Vertex {
 }
 
 const VERTICES: &[Vertex] = &[
-    Vertex { position: [0.0,  0.0,  25.0],      color: [0.0, 0.03, 0.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,  0.0, -25.0],      color: [0.0, 0.03, 0.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [25.0,  0.0, -0.0],      color: [0.0, 0.03, 0.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-25.0, 0.0, -0.0],      color: [0.0, 0.03, 0.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+
+    Vertex { position: [25.0,  0.0,  25.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [0.0,  0.0, 25.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [25.0,  0.0, 0.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [25.0,  0.0, 0.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [0.0,  0.0, 25.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [0.0, 0.0, 0.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+
+    Vertex { position: [0.0,  0.0,  25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [-25.0,  0.0, 25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [0.0,  0.0, 0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [0.0,  0.0, 0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [-25.0,  0.0, 25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [-25.0, 0.0, 0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+
+    Vertex { position: [25.0,  0.0,  0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [0.0,  0.0, 0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [25.0,  0.0, -25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [25.0,  0.0, -25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [0.0,  0.0, 0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [0.0, 0.0, -25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+
+    Vertex { position: [0.0,  0.0,  0.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [-25.0,  0.0, 0.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [0.0,  0.0, -25.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [0.0,  0.0, -25.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [-25.0,  0.0, 0.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [-25.0, 0.0, -25.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+
 ];                  
                     
 const VERTICES_CUBE: &[Vertex] = &[                 
-    Vertex { position: [0.0,  0.0,  5.0],       color: [0.0, 1.0, 0.0,1.0],         normal:[1.0, 0.0, 0.0],   },
-    Vertex { position: [0.0,  0.0, -5.0],       color: [0.0, 1.0, 0.0,1.0],         normal:[1.0, 0.0, 0.0],   },
-    Vertex { position: [0.0,  50.0, -0.0],      color: [0.0, 1.0, 0.0,1.0],         normal:[1.0, 0.0, 0.0],   },
-    Vertex { position: [0.0, -10.0, -0.0],      color: [0.0, 1.0, 0.0,1.0],         normal:[1.0, 0.0, 0.0],   },
+    Vertex { position: [0.0,  0.0,  5.0],       color: [1.0, 0.0, 0.0,1.0],         normal:[1.0, 0.0, 0.0],   },
+    Vertex { position: [0.0,  0.0, -5.0],       color: [1.0, 0.0, 0.0,1.0],         normal:[1.0, 0.0, 0.0],   },
+    Vertex { position: [0.0,  10.0, -0.0],      color: [1.0, 0.0, 0.0,1.0],         normal:[1.0, 0.0, 0.0],   },
+    Vertex { position: [0.0, -50.0, -0.0],      color: [1.0, 0.0, 0.0,1.0],         normal:[1.0, 0.0, 0.0],   },
 ];                  
                     
 const VERTICES_CENTER: &[Vertex] = &[                   
-    Vertex { position: [10.0,  -100.0,  50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [1.0, 0.0, 0.0],  },
-    Vertex { position: [10.0,  -100.0, -50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [1.0, 0.0, 0.0],  },
-    Vertex { position: [10.0,  200.0, 50.0],    color: [0.012, 0.02, 0.014, 0.7],   normal: [1.0, 0.0, 0.0],  },
-    Vertex { position: [10.0,  -100.0,  -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [1.0, 0.0, 0.0],  },
-    Vertex { position: [10.0, 200.0,  50.0],    color: [0.012, 0.02, 0.014, 0.7],   normal: [1.0, 0.0, 0.0],  },
-    Vertex { position: [10.0,  200.0, -50.0],   color: [0.012, 0.02, 0.014, 0.7],   normal: [1.0, 0.0, 0.0],  },
+    Vertex { position: [10.0,  0.0,  50.0],     color: [0.0, 0.0, 0.0, 0.7],   normal: [1.0, 0.0, 0.0],  },
+    Vertex { position: [10.0,  0.0, -50.0],     color: [0.0, 0.0, 0.0, 0.7],   normal: [1.0, 0.0, 0.0],  },
+    Vertex { position: [10.0,  300.0, 50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [1.0, 0.0, 0.0],  },
+    Vertex { position: [10.0,  0.0,  -50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [1.0, 0.0, 0.0],  },
+    Vertex { position: [10.0, 300.0,  50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [1.0, 0.0, 0.0],  },
+    Vertex { position: [10.0,  300.0, -50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [1.0, 0.0, 0.0],  },
 
-    Vertex { position: [-10.0,  -100.0,  50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [-1.0, 0.0, 0.0], },
-    Vertex { position: [-10.0,  -100.0, -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [-1.0, 0.0, 0.0], },
-    Vertex { position: [-10.0,  200.0, 50.0],   color: [0.012, 0.02, 0.014, 0.7],   normal: [-1.0, 0.0, 0.0], },
-    Vertex { position: [-10.0,  -100.0,  -50.0],color: [0.012, 0.02, 0.014, 0.7],   normal: [-1.0, 0.0, 0.0], },
-    Vertex { position: [-10.0, 200.0,  50.0],   color: [0.012, 0.02, 0.014, 0.7],   normal: [-1.0, 0.0, 0.0], },
-    Vertex { position: [-10.0,  200.0, -50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [-1.0, 0.0, 0.0], },
-  
-    Vertex { position: [-10.0,  -100.0, 50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, 1.0],  },
-    Vertex { position: [10.0,  -100.0,  50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, 1.0],  },
-    Vertex { position: [-10.0,  200.0,  50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, 1.0],  },
-    Vertex { position: [10.0,  -100.0, 50.0],   color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, 1.0],  },
-    Vertex { position: [-10.0, 200.0,   50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, 1.0],  },
-    Vertex { position: [10.0,  200.0,  50.0],   color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, 1.0],  },
+    Vertex { position: [-10.0,  0.0, 50.0],     color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, 1.0],  },
+    Vertex { position: [10.0,  0.0,  50.0],     color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, 1.0],  },
+    Vertex { position: [-10.0,  300.0,  50.0],  color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, 1.0],  },
+    Vertex { position: [10.0,  0.0, 50.0],      color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, 1.0],  },
+    Vertex { position: [-10.0, 300.0,   50.0],  color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, 1.0],  },
+    Vertex { position: [10.0,  300.0,  50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, 1.0],  },
 
-    Vertex { position: [-10.0,  -100.0, -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, -1.0], },
-    Vertex { position: [10.0,  -100.0,  -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, -1.0], },
-    Vertex { position: [-10.0,  200.0,  -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, -1.0], },
-    Vertex { position: [10.0,  -100.0, -50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, -1.0], },
-    Vertex { position: [-10.0, 200.0,   -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, -1.0], },
-    Vertex { position: [10.0,  200.0,  -50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 0.0, -1.0], },
+    Vertex { position: [-10.0,  0.0, -50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, -1.0], },
+    Vertex { position: [10.0,  0.0,  -50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, -1.0], },
+    Vertex { position: [-10.0,  300.0,  -50.0], color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, -1.0], },
+    Vertex { position: [10.0,  0.0, -50.0],     color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, -1.0], },
+    Vertex { position: [-10.0, 300.0,   -50.0], color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, -1.0], },
+    Vertex { position: [10.0,  300.0,  -50.0],  color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, -1.0], },
 
-    Vertex { position: [-10.0,  200.0, 50.0],   color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 1.0, 0.0],  },
-    Vertex { position: [10.0,   200.0,  50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 1.0, 0.0],  },
-    Vertex { position: [-10.0,  200.0,  -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 1.0, 0.0],  },
-    Vertex { position: [10.0,  200.0, 50.0],    color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 1.0, 0.0],  },
-    Vertex { position: [-10.0, 200.0,   -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 1.0, 0.0],  },
-    Vertex { position: [10.0,  200.0,  -50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, 1.0, 0.0],  },
- 
-    Vertex { position: [-10.0,  -100.0, 50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, -1.0, -0.0],},
-    Vertex { position: [10.0,  -100.0,  50.0],  color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, -1.0, -0.0],},
-    Vertex { position: [-10.0,  -100.0,  -50.0],color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, -1.0, -0.0],},
-    Vertex { position: [10.0,  -100.0, 50.0],   color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, -1.0, -0.0],},
-    Vertex { position: [-10.0, -100.0,   -50.0],color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, -1.0, -0.0],},
-    Vertex { position: [10.0,  -100.0,  -50.0], color: [0.012, 0.02, 0.014, 0.7],   normal: [0.0, -1.0, -0.0],},
+    Vertex { position: [-10.0,  300.0, 50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 1.0, 0.0],  },
+    Vertex { position: [10.0,   300.0,  50.0],  color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 1.0, 0.0],  },
+    Vertex { position: [-10.0,  300.0,  -50.0], color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 1.0, 0.0],  },
+    Vertex { position: [10.0,  300.0, 50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 1.0, 0.0],  },
+    Vertex { position: [-10.0, 300.0,   -50.0], color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 1.0, 0.0],  },
+    Vertex { position: [10.0,  300.0,  -50.0],  color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 1.0, 0.0],  },
+
+    Vertex { position: [-10.0,  0.0, 50.0],     color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, -1.0, -0.0],},
+    Vertex { position: [10.0,  0.0,  50.0],     color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, -1.0, -0.0],},
+    Vertex { position: [-10.0,  0.0,  -50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, -1.0, -0.0],},
+    Vertex { position: [10.0,  0.0, 50.0],      color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, -1.0, -0.0],},
+    Vertex { position: [-10.0, 0.0,   -50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, -1.0, -0.0],},
+    Vertex { position: [10.0,  0.0,  -50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, -1.0, -0.0],},
+
+    Vertex { position: [-10.0,  0.0,  50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [-1.0, 0.0, 0.0], },
+    Vertex { position: [-10.0,  0.0, -50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [-1.0, 0.0, 0.0], },
+    Vertex { position: [-10.0,  300.0, 50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [-1.0, 0.0, 0.0], },
+    Vertex { position: [-10.0,  0.0,  -50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [-1.0, 0.0, 0.0], },
+    Vertex { position: [-10.0, 300.0,  50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [-1.0, 0.0, 0.0], },
+    Vertex { position: [-10.0,  300.0, -50.0],  color: [0.0, 0.0, 0.0, 0.7],   normal: [-1.0, 0.0, 0.0], },
     
 ];
 
@@ -306,7 +332,7 @@ pub struct State {
     light_uniform: LightUniform,
     light_buffer: wgpu::Buffer,
     light_bind_group: wgpu::BindGroup,
-
+    
     diffuse_bind_group: wgpu::BindGroup,
     depth_bind_group: wgpu::BindGroup,
     normal_bind_group: wgpu::BindGroup,
@@ -533,7 +559,7 @@ impl State {
 
         
         let light_uniform = LightUniform {
-            position: [200.0, 300.0, 200.0],
+            position: [200.0, 100.0, 200.0],
             _padding: 0,
             flag: [0.0,1.0,1.0],
             _padding0: 0,
@@ -875,6 +901,7 @@ impl State {
             label: Some("Render Pipeline Layout"),
             bind_group_layouts: &[
                 &camera_bind_group_layout,
+                &light_bind_group_layout,
             ],
             push_constant_ranges: &[],
         });
@@ -952,7 +979,7 @@ impl State {
 
 
             primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::LineList,
+                topology: wgpu::PrimitiveTopology::TriangleList,
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
                 cull_mode: Some(wgpu::Face::Front),
@@ -1153,7 +1180,10 @@ impl State {
                 entry_point: "fs_main",
                 targets: &[Some(wgpu::ColorTargetState {
                     format: config.format,
-                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    blend: Some(wgpu::BlendState {
+                        color: wgpu::BlendComponent::OVER,
+                        alpha: wgpu::BlendComponent::REPLACE,
+                    }),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
             }),
@@ -1725,6 +1755,8 @@ impl State {
             render_pass_diffuse.set_pipeline(&self.render_terrain_pipeline);
 
             render_pass_diffuse.set_bind_group(0, &self.camera_bind_group, &[]);
+            render_pass_diffuse.set_bind_group(1, &self.light_bind_group, &[]);
+
             render_pass_diffuse.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass_diffuse.set_vertex_buffer(1, self.instance_buffer.slice(..));
 

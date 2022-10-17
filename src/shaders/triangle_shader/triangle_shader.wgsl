@@ -28,19 +28,15 @@ fn vs_main(
 ) -> VertexOutput {
     var out: VertexOutput;
     out.clip_position = camera.view_proj * vec4<f32>(model.position, 1.0);
-    if (light.flag[0] == 0.0){
 
-        let light_dir = normalize(light.position - model.position);
-        let diffuse_strength = max(dot(model.normal, light_dir), 0.0);
-        let rgb_color = vec3<f32>(model.color[0],model.color[1],model.color[2]);
-        let diffuse_color = rgb_color * diffuse_strength;
+    let light_dir = normalize(light.position - model.position);
+    let direct_dir= normalize(vec3<f32>(6000.0,6000.0,6000.0) - model.position);
+    var diffuse_strength = max(dot(model.normal, light_dir),0.0);
+    var direct_strength = max(dot(model.normal, direct_dir),0.0);
+    let rgb_color = vec3<f32>(model.color[0],model.color[1],model.color[2]);
+    let diffuse_color = rgb_color +   vec3<f32>(diffuse_strength/100.0);
 
-        out.color = vec4<f32>(diffuse_color[0],diffuse_color[1],diffuse_color[2],model.color[3]);
-
-    }
-    else{
-        out.color = vec4<f32>((model.normal[0]+1.0)/2.0,(model.normal[1]+1.0)/2.0,(model.normal[2]+1.0)/2.0,1.0);
-    }
+    out.color = vec4<f32>(diffuse_color[0],diffuse_color[1],diffuse_color[2],model.color[3]);
     
     return out;
 }

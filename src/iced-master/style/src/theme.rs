@@ -702,11 +702,11 @@ impl text_input::StyleSheet for Theme {
     }
 
     fn placeholder_color(&self, _style: Self::Style) -> Color {
-        Color::from_rgb(0.0,1.0,0.0)
+        Color::from_rgb(1.0,0.0,0.0)
     }
 
     fn value_color(&self, _style: Self::Style) -> Color {
-        Color::from_rgb(0.0,1.0,0.0)
+        Color::from_rgb(1.0,0.0,0.0)
     }
 
     fn selection_color(&self, _style: Self::Style) -> Color {
