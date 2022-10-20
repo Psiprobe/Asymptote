@@ -11,9 +11,7 @@ pub struct Triangle{
     position: [f32; 3],
     vertex: [Vertex; 3],
 }
-impl Triangle{
-            
-}
+
 pub struct Quad{
     position: [f32; 3],
     triangle: [Triangle; 2],

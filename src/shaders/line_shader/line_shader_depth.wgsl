@@ -37,6 +37,9 @@ fn vs_main(
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    let normalized_depth = in.clip_position.z * in.clip_position.z * 8.333 - 0.13; 
-    return vec4<f32>(vec3<f32>(normalized_depth),1.0);
+    let ndc = in.clip_position.z * 2.0 - 1.0;
+    let near = 1300.0;
+    let far = 3750.0;
+    let linear_depth = (2.0 * near * far) / (far + near - ndc * (far - near));
+    return vec4<f32>(vec3<f32>((linear_depth - near)/(far   - near)),1.0);
 }

@@ -62,17 +62,20 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     
     let diffuse = textureSample(t_diffuse, s_diffuse, in.tex_coords);
     
-    if(normal.x != normal_left.x || normal.y != normal_left.y ||normal.z != normal_left.z){
+    if((depth.x - depth_down.x) < -0.02|| (depth.x - depth_left.x) < -0.02|| (depth.x - depth_right.x) < -0.02|| (depth.x - depth_up.x) < -0.02){
+
+        return vec4<f32>(1.0,1.0,1.0,1.0);
+
+    }else if(normal.x != normal_left.x || normal.y != normal_left.y ||normal.z != normal_left.z){
+
         return diffuse * 5.0;
+
     }
     else if(normal.x != normal_down.x|| normal.y != normal_down.y||normal.z != normal_down.z){
+
         return diffuse * 5.0;
 
     }
-    else if((depth.x - depth_down.x) < -0.1|| (depth.x - depth_left.x) < -0.1|| (depth.x - depth_right.x) < -0.1|| (depth.x - depth_up.x) < -0.1){
-        return diffuse * 5.0;
-    }
-
     else {
         return diffuse;
     }
