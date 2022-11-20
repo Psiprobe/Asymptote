@@ -51,6 +51,10 @@ impl Descriptor{
                 }
                 
 
+                "/tab"=>{
+                    s = String::from("Psiprobe joined the game");
+
+                }
                 _=>{
                     s = String::from("Fail to parse command");
                 }
