@@ -204,7 +204,7 @@ impl Vertex_tex {
 
 
 
-const NUM_INSTANCES_PER_ROW: i32 = 100;
+const NUM_INSTANCES_PER_ROW: i32 = 1000;
 
 
 struct Instance {
@@ -317,8 +317,7 @@ pub struct State {
     vertex_cube_buffer: wgpu::Buffer,
     vertex_center_buffer: wgpu::Buffer,
 
-    num_vertices: u32,
-    num_cube_vertices: u32,
+    num_vertices: u32,    num_cube_vertices: u32,
     num_center_vertices: u32,
 
     camera: camera::Camera,
@@ -475,8 +474,8 @@ impl State {
             position: (0.0, 0.0, 0.0).into(),
             target: (0.0, 0.0, 0.0).into(),
             up: cgmath::Vector3::unit_y(),
-            aspect: scr_width as f32 / scr_height as f32,
-            fovy: scr_height as f32 / 4.0 as f32,
+            aspect: texture_size.width as f32 / texture_size.height as f32,
+            fovy: texture_size.height as f32 / 2.0 as f32,
             znear: 1300.0,
             zfar: 3750.0,
         };
@@ -1139,7 +1138,7 @@ impl State {
 
             primitive: wgpu::PrimitiveState {
 
-                topology: wgpu::PrimitiveTopology::LineList,
+                topology: wgpu::PrimitiveTopology::PointList,
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
                 cull_mode: Some(wgpu::Face::Front),
@@ -2050,8 +2049,6 @@ pub async fn run() {
             }
 
             winit::event::Event::RedrawRequested(window_id) if window_id == window.id() => {
-
-
                 let now = Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
