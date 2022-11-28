@@ -31,14 +31,7 @@ fn vs_main(
 ) -> VertexOutput {
     var out: VertexOutput;
     out.clip_position = camera.view_proj * vec4<f32>(model.position + light.position, 1.0);
-
-    //when flag is on, render to normal texture
-    if (light.flag[0] == 0.0){
-        out.color = model.color;
-    }
-    else{
-        out.color = vec4<f32>((model.normal[0]+1.0)/2.0,(model.normal[1]+1.0)/2.0,(model.normal[2]+1.0)/2.0,1.0);
-    }
+    out.color = model.color;
     return out;
 }
 

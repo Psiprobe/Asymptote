@@ -1,0 +1,12 @@
+{
+  "name": "prj",
+  "version": "0.1.0",
+  "files": [
+    "prj_bg.wasm",
+    "prj.js",
+    "prj.d.ts"
+  ],
+  "module": "prj.js",
+  "types": "prj.d.ts",
+  "sideEffects": false
+}

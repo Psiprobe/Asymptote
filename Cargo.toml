@@ -16,19 +16,14 @@ cfg-if = "1"
 env_logger = "0.9"
 log = "0.4"
 iced_winit = { path = "./src/iced-master/winit" }
-iced_wgpu = { path = "./src/iced-master/wgpu"}
+iced_wgpu = { path = "./src/iced-master/wgpu", features = ["webgl"]}
 pollster = "0.2"
 cgmath = "0.18"
 bytemuck = { version = "1.4", features = [ "derive" ] }
 
-
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-
 console_error_panic_hook = "0.1.6"
 console_log = "0.2.0"
 wasm-bindgen = "0.2.76"
 wasm-bindgen-futures = "0.4"
-web-sys = { version = "0.3.58", features = ["Element", "HtmlCanvasElement", "Window", "Document"] }
-
-
-
+web-sys = { version = "0.3", features = ["Element", "HtmlCanvasElement", "Window", "Document"] }

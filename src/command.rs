@@ -18,11 +18,26 @@ impl Descriptor{
         if  first == Some('/') {
             match &s as &str{
 
-                
+                "/output"=>{
+                    state.diffuse_texture_flag = false;
+                    state.normal_texture_flag = false;
+                    state.depth_texture_flag = false;
+                    state.output_texture_flag = true;
+                    s = String::from("Texture changed");
+                }
+                "/diffuse"=>{
+                    state.diffuse_texture_flag = true;
+                    state.normal_texture_flag = false;
+                    state.depth_texture_flag = false;
+                    state.output_texture_flag = false;
+                    s = String::from("Texture changed");
+
+                }
                 "/normal"=>{
                     state.diffuse_texture_flag = false;
                     state.normal_texture_flag = true;
                     state.depth_texture_flag = false;
+                    state.output_texture_flag = false;
                     s = String::from("Texture changed");
                 }
 
@@ -30,17 +45,11 @@ impl Descriptor{
                     state.diffuse_texture_flag = false;
                     state.normal_texture_flag = false;
                     state.depth_texture_flag = true;
+                    state.output_texture_flag = false;
                     s = String::from("Texture changed");
 
                 }
-
-                "/diffuse"=>{
-                    state.diffuse_texture_flag = true;
-                    state.normal_texture_flag = false;
-                    state.depth_texture_flag = false;
-                    s = String::from("Texture changed");
-
-                }
+                
 
                 _=>{
                     s = String::from("Fail to parse command");
