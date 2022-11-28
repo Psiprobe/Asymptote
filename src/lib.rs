@@ -54,8 +54,10 @@ struct Vertex {
 
 const VERTICES: &[Vertex] = &[
 
-    Vertex { position: [-0.0,   0.5,  0.0],        color: [1.0,0.5,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-0.0,   -0.5,  0.0],      color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [0.5,  0.0,  0.5],        color: [1.0, 1.0, 1.0, 0.1],         normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [0.5,  -1.0,  0.5],       color: [1.0, 1.0, 1.0, 0.1],         normal:[0.0, 1.0, 0.0],   },
+    
+
     
 ];                  
                     
@@ -426,8 +428,8 @@ impl State {
         );
 
         let texture_size = wgpu::Extent3d {
-            width: scr_width/2,
-            height: scr_height/2,
+            width: scr_width,
+            height: scr_height,
             depth_or_array_layers: 1,
         };
 
@@ -449,10 +451,12 @@ impl State {
             position: (0.0, 0.0, 0.0).into(),
             target: (0.0, 0.0, 0.0).into(),
             up: cgmath::Vector3::unit_y(),
+            forward: cgmath::Vector3::unit_y(),
             aspect: texture_size.width as f32 / texture_size.height as f32,
             fovy: texture_size.height as f32 / 2.0 as f32,
             znear: 1300.0,
             zfar: 3750.0,
+            left: cgmath::Vector3::unit_y(),
         };
 
         let camera_controller = camera::CameraController::new(scr_width as f32 , scr_height as f32,300.0,0.002);
@@ -683,9 +687,9 @@ impl State {
             address_mode_u: wgpu::AddressMode::Repeat,
             address_mode_v: wgpu::AddressMode::Repeat,
             address_mode_w: wgpu::AddressMode::Repeat,
-            mag_filter: wgpu::FilterMode::Nearest,
-            min_filter: wgpu::FilterMode::Nearest,
-            mipmap_filter: wgpu::FilterMode::Nearest,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::FilterMode::Linear,
             ..Default::default()
         });
 
@@ -693,9 +697,9 @@ impl State {
             address_mode_u: wgpu::AddressMode::Repeat,
             address_mode_v: wgpu::AddressMode::Repeat,
             address_mode_w: wgpu::AddressMode::Repeat,
-            mag_filter: wgpu::FilterMode::Nearest,
-            min_filter: wgpu::FilterMode::Nearest,
-            mipmap_filter: wgpu::FilterMode::Nearest,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::FilterMode::Linear,
             ..Default::default()
         });
 
@@ -703,9 +707,9 @@ impl State {
             address_mode_u: wgpu::AddressMode::Repeat,
             address_mode_v: wgpu::AddressMode::Repeat,
             address_mode_w: wgpu::AddressMode::Repeat,
-            mag_filter: wgpu::FilterMode::Nearest,
-            min_filter: wgpu::FilterMode::Nearest,
-            mipmap_filter: wgpu::FilterMode::Nearest,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::FilterMode::Linear,
             ..Default::default()
         });
 
@@ -955,10 +959,10 @@ impl State {
 
 
             primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::PointList,
+                topology: wgpu::PrimitiveTopology::LineList,
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Front),
+                cull_mode: None,
                 // Setting this to anything other than Fill requires Features::NON_FILL_POLYGON_MODE
                 polygon_mode: wgpu::PolygonMode::Fill,
                 // Requires Features::DEPTH_CLIP_CONTROL
@@ -1424,7 +1428,7 @@ impl State {
                         (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |y| {
                         
                             
-                            let position = cgmath::Vector3 { x:(x) as f32, y: y as f32, z: (z) as f32 } ;
+                            let position = cgmath::Vector3 { x: x as f32, y: y as f32, z: z as f32 } ;
                             Instance {
                                 position,
                             }
@@ -1546,11 +1550,11 @@ impl State {
 
     fn input(&mut self, event: &WindowEvent) -> bool {
         self.camera_controller.process_events(event);
-        if self.camera_controller.is_slash_pressed && !self.cli_flag{
+        if self.camera_controller.is_cli_pressed && !self.cli_flag{
             self.cli_flag = !self.cli_flag;
             self.cli_status = !self.cli_status;
         }
-        if self.camera_controller.is_slash_released{
+        if self.camera_controller.is_cli_released{
             self.cli_flag = false;
         }
         true
@@ -1578,6 +1582,8 @@ impl State {
         );
 
         let old_position: cgmath::Vector3<_> = self.light_uniform.position.into();
+
+        
         self.light_uniform.position =
                 (cgmath::Quaternion::from_axis_angle((0.0, 1.0, 0.0).into(), cgmath::Deg(1.0))
                 * old_position)
