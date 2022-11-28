@@ -1,6 +1,3 @@
-[build]
-rustflags = ["--cfg=web_sys_unstable_apis"]
-
 [package]
 name = "prj"
 version = "0.1.0"
