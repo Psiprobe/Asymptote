@@ -54,34 +54,9 @@ struct Vertex {
 
 const VERTICES: &[Vertex] = &[
 
-    Vertex { position: [25.0,   -1.0,  25.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, 25.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [25.0,   -1.0, 0.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [25.0,   -1.0, 0.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, 25.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, 0.0],        color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-
-    Vertex { position: [0.0,    -1.0,  25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-25.0,  -1.0, 25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, 0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, 0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-25.0,  -1.0, 25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-25.0,  -1.0, 0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-
-    Vertex { position: [25.0,   -1.0,  0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, 0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [25.0,   -1.0, -25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [25.0,   -1.0, -25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, 0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, -25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-
-    Vertex { position: [0.0,    -1.0,  0.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-25.0,  -1.0, 0.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, -25.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, -25.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-25.0,  -1.0, 0.0],     color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-25.0,  -1.0, -25.0],   color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-
+    Vertex { position: [-0.0,   0.5,  0.0],        color: [1.0,0.5,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [-0.0,   -0.5,  0.0],      color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    
 ];                  
                     
 const VERTICES_CUBE: &[Vertex] = &[                 
@@ -204,7 +179,7 @@ impl Vertex_tex {
 
 
 
-const NUM_INSTANCES_PER_ROW: i32 = 100;
+const NUM_INSTANCES_PER_ROW: i32 = 75;
 
 
 struct Instance {
@@ -317,8 +292,7 @@ pub struct State {
     vertex_cube_buffer: wgpu::Buffer,
     vertex_center_buffer: wgpu::Buffer,
 
-    num_vertices: u32,
-    num_cube_vertices: u32,
+    num_vertices: u32,    num_cube_vertices: u32,
     num_center_vertices: u32,
 
     camera: camera::Camera,
@@ -475,8 +449,8 @@ impl State {
             position: (0.0, 0.0, 0.0).into(),
             target: (0.0, 0.0, 0.0).into(),
             up: cgmath::Vector3::unit_y(),
-            aspect: scr_width as f32 / scr_height as f32,
-            fovy: scr_height as f32 / 4.0 as f32,
+            aspect: texture_size.width as f32 / texture_size.height as f32,
+            fovy: texture_size.height as f32 / 2.0 as f32,
             znear: 1300.0,
             zfar: 3750.0,
         };
@@ -981,7 +955,7 @@ impl State {
 
 
             primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList,
+                topology: wgpu::PrimitiveTopology::PointList,
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
                 cull_mode: Some(wgpu::Face::Front),
@@ -1139,7 +1113,7 @@ impl State {
 
             primitive: wgpu::PrimitiveState {
 
-                topology: wgpu::PrimitiveTopology::LineList,
+                topology: wgpu::PrimitiveTopology::PointList,
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
                 cull_mode: Some(wgpu::Face::Front),
@@ -1446,13 +1420,18 @@ impl State {
         
 
         let instances = (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(|z| {
-            (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |x| {
-                let position = cgmath::Vector3 { x:(x*50) as f32, y: 0.0, z: (z*50) as f32 } ;
-                Instance {
-                    position,
-                }
-            })
-        }).collect::<Vec<_>>();
+                        (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(move |x| {
+                        (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |y| {
+                        
+                            
+                            let position = cgmath::Vector3 { x:(x) as f32, y: y as f32, z: (z) as f32 } ;
+                            Instance {
+                                position,
+                            }
+                        })
+                        })
+                    }).collect::<Vec<_>>();
+        
         let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
         let instance_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
@@ -2050,8 +2029,6 @@ pub async fn run() {
             }
 
             winit::event::Event::RedrawRequested(window_id) if window_id == window.id() => {
-
-
                 let now = Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
