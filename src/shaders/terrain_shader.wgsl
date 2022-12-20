@@ -48,7 +48,11 @@ fn vs_main(
     let light_dir = normalize(light.position - (model_matrix *vec4<f32>(model.position, 1.0)).xyz);
     var diffuse_strength = max(dot(model.normal, light_dir),0.0);
     let rgb_color = vec3<f32>(model.color[0],model.color[1],model.color[2]);
+<<<<<<< HEAD
     let diffuse_color = rgb_color *  diffuse_strength * diffuse_strength;
+=======
+    let diffuse_color = rgb_color *  diffuse_strength *  diffuse_strength;
+>>>>>>> 717120a (Light uniform update)
 
     if( (model_matrix *vec4<f32>(model.position, 1.0)).xyz.y == 1.0 || (model_matrix *vec4<f32>(model.position, 1.0)).xyz.y == 2.0){
         out.color = vec4<f32>(0.0,1.0,0.0,1.0);

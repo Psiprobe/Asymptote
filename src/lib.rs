@@ -1428,7 +1428,7 @@ impl State {
                         (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |y| {
                         
                             
-                            let position = cgmath::Vector3 { x: x as f32, y: y as f32, z: z as f32 } ;
+                            let position = cgmath::Vector3 { x:x as f32, y:y as f32, z:z as f32 } ;
                             Instance {
                                 position,
                             }
