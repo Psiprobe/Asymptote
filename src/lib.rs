@@ -3,7 +3,7 @@ mod shell;
 mod command;
 mod geometry_lib;
 
-use cgmath::Rotation3;
+use cgmath::*;
 
 use shell::Controls;
 use shell::Message::{FrameUpdate,Update,ServerLog,CommandParsed};
@@ -54,9 +54,8 @@ struct Vertex {
 
 const VERTICES: &[Vertex] = &[
 
-    Vertex { position: [0.5,  0.0,  0.5],        color: [1.0, 1.0, 1.0, 0.1],         normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.5,  -1.0,  0.5],       color: [1.0, 1.0, 1.0, 0.1],         normal:[0.0, 1.0, 0.0],   },
-    
+    Vertex { position: [-0.0,  1.0,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [-0.0, -1.0,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
 
     
 ];                  
@@ -179,11 +178,6 @@ impl Vertex_tex {
     }
 }
 
-
-
-const NUM_INSTANCES_PER_ROW: i32 = 75;
-
-
 struct Instance {
     position: cgmath::Vector3<f32>,
 }
@@ -236,31 +230,7 @@ impl InstanceRaw {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+const NUM_INSTANCES_PER_ROW: i32 = 1000;
 pub struct State {
 
     iced_state: program::State<shell::Controls>,
@@ -319,8 +289,10 @@ pub struct State {
     normal_texture_view:wgpu::TextureView,
     depth_texture_view:wgpu::TextureView,
     depth_test_texture_view:wgpu::TextureView,
+    msaa_texture_view:wgpu::TextureView,
 
     instances: Vec<Instance>,
+    instance_data: Vec<InstanceRaw>,
     instance_buffer: wgpu::Buffer,
 
     renderer: Renderer,
@@ -335,6 +307,8 @@ pub struct State {
     depth_texture_flag: bool,
     output_texture_flag: bool,
     cli_flag: bool,
+
+    
 }
 impl State {
     async fn new(window: &Window,scr_width:u32,scr_height:u32) -> Self {
@@ -398,9 +372,13 @@ impl State {
                     .await
                     .expect("Request device"),
             )
+            
         });
+        
 
         let mut renderer =Renderer::new(Backend::new(&device, Settings::default(), format));
+
+        
 
         let mut debug = Debug::new();
 
@@ -426,6 +404,8 @@ impl State {
             &mut renderer,
             &mut debug,
         );
+        
+
 
         let texture_size = wgpu::Extent3d {
             width: scr_width,
@@ -454,8 +434,8 @@ impl State {
             forward: cgmath::Vector3::unit_y(),
             aspect: texture_size.width as f32 / texture_size.height as f32,
             fovy: texture_size.height as f32 / 2.0 as f32,
-            znear: 1300.0,
-            zfar: 3750.0,
+            znear: 1000.0,
+            zfar: 5100.0,
             left: cgmath::Vector3::unit_y(),
         };
 
@@ -539,7 +519,7 @@ impl State {
 
         
         let light_uniform = LightUniform {
-            position: [200.0, 100.0, 200.0],
+            position: [150.0, 150.0, 0.0],
             _padding: 0,
             flag: [0.0,1.0,1.0],
             _padding0: 0,
@@ -677,11 +657,29 @@ impl State {
                 label: Some("depth_texture"),
             }
         );
+
+        let msaa_texture = device.create_texture(
+            &wgpu::TextureDescriptor {
+                
+                size: wgpu::Extent3d {
+                    width: scr_width,
+                    height: scr_height,
+                    depth_or_array_layers: 1,
+                },
+                mip_level_count: 1, 
+                sample_count: 4,
+                dimension: wgpu::TextureDimension::D2,
+                format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                label: Some("depth_texture"),
+            }
+        );
         
         let diffuse_texture_view = diffuse_texture.create_view(&wgpu::TextureViewDescriptor::default());
         let normal_texture_view = normal_texture.create_view(&wgpu::TextureViewDescriptor::default());
         let depth_texture_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
         let depth_test_texture_view = depth_test_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let msaa_texture_view = msaa_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         let normal_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
             address_mode_u: wgpu::AddressMode::Repeat,
@@ -1036,7 +1034,7 @@ impl State {
             depth_stencil: None,
 
             multisample: wgpu::MultisampleState {
-                count: 1,
+                count: 4,
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
@@ -1117,7 +1115,7 @@ impl State {
 
             primitive: wgpu::PrimitiveState {
 
-                topology: wgpu::PrimitiveTopology::PointList,
+                topology: wgpu::PrimitiveTopology::LineList,
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
                 cull_mode: Some(wgpu::Face::Front),
@@ -1424,24 +1422,27 @@ impl State {
         
 
         let instances = (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(|z| {
-                        (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(move |x| {
-                        (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |y| {
+                        (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |x| {
                         
                             
-                            let position = cgmath::Vector3 { x:x as f32, y:y as f32, z:z as f32 } ;
+                            let position = cgmath::Vector3 { x:x as f32, y:0 as f32 , z:z as f32 } ;
+                            //+ 20.0*Rad::sin(Rad(x as f32 * x as f32 / 20.0+z as f32 / 20.0)) as f32
                             Instance {
                                 position,
                             }
-                        })
+                        
                         })
                     }).collect::<Vec<_>>();
+
+                    
         
         let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+
         let instance_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
             label: Some("Instance Buffer"),
             contents: bytemuck::cast_slice(&instance_data),
-            usage: wgpu::BufferUsages::VERTEX,
+            usage: wgpu::BufferUsages::VERTEX|wgpu::BufferUsages::COPY_DST,
         });
 
         let num_vertices = VERTICES.len() as u32;
@@ -1511,6 +1512,7 @@ impl State {
             depth_texture_view,
             normal_texture_view,
             depth_test_texture_view,
+            msaa_texture_view,
 
             instances,
             instance_buffer,
@@ -1527,6 +1529,8 @@ impl State {
             diffuse_texture_flag,
             depth_texture_flag,
             output_texture_flag,
+
+            instance_data,
 
         }
 
@@ -1589,12 +1593,33 @@ impl State {
                 * old_position)
                 .into();
         self.queue.write_buffer(&self.light_buffer, 0, bytemuck::cast_slice(&[self.light_uniform]));
+/* 
+        self.instances = (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(|z| {
+            (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |x| {
+            
+                
+                let position = cgmath::Vector3 { x:x as f32, y: x as f32 , z:z as f32 } ;
+                //+ 20.0*Rad::sin(Rad(x as f32 * x as f32 / 20.0+z as f32 / 20.0)) as f32
+                Instance {
+                    position,
+                }
+            
+            })
+        }).collect::<Vec<_>>();
+
+        
+
+        self.instance_data = self.instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+        self.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&self.instance_data));
+*/  
+        
 
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
 
         let output = self.surface.get_current_texture()?;
+        
         let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         let mut normal_encoder = self
@@ -1780,8 +1805,8 @@ impl State {
             let mut render_pass = surface_encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("Render Pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
+                    view: &self.msaa_texture_view,
+                    resolve_target: Some(&view),
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(
                             wgpu::Color {
