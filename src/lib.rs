@@ -148,12 +148,12 @@ struct Vertex_tex {
 
 const VERTICES_TEX: &[Vertex_tex] = &[
 
-    Vertex_tex { position: [1.0,  1.0, 0.0], tex_coords: [1.0 ,0.0] },
-    Vertex_tex { position: [1.0, -1.0, 0.0], tex_coords: [1.0 ,1.0] },
-    Vertex_tex { position: [-1.0,-1.0, 0.0], tex_coords: [0.0 ,1.0] },
-    Vertex_tex { position: [-1.0, -1.0, 0.0], tex_coords:[0.0 ,1.0] },
-    Vertex_tex { position: [-1.0, 1.0, 0.0], tex_coords: [0.0 ,0.0] },
-    Vertex_tex { position: [1.0, 1.0, 0.0], tex_coords:  [1.0 ,0.0] },
+    Vertex_tex { position: [1.0 + 1.0 / 1920.0,  1.0 + 1.0 / 1080.0, 0.0], tex_coords: [1.0 ,0.0] },
+    Vertex_tex { position: [1.0 + 1.0 / 1920.0, -1.0 + 1.0 / 1080.0, 0.0], tex_coords: [1.0 ,1.0] },
+    Vertex_tex { position: [-1.0 + 1.0 / 1920.0,-1.0 + 1.0 / 1080.0, 0.0], tex_coords: [0.0 ,1.0] },
+    Vertex_tex { position: [-1.0 + 1.0 / 1920.0, -1.0 + 1.0 / 1080.0, 0.0], tex_coords:[0.0 ,1.0] },
+    Vertex_tex { position: [-1.0 + 1.0 / 1920.0, 1.0 + 1.0 / 1080.0, 0.0], tex_coords: [0.0 ,0.0] },
+    Vertex_tex { position: [1.0 + 1.0 / 1920.0, 1.0 + 1.0 / 1080.0, 0.0], tex_coords:  [1.0 ,0.0] },
 
 ];
 
@@ -1081,7 +1081,7 @@ impl State {
             depth_stencil: None,
 
             multisample: wgpu::MultisampleState {
-                count: 1,
+                count: 4,
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
