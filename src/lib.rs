@@ -145,15 +145,18 @@ struct Vertex_tex {
     tex_coords: [f32; 2],
 }
 
+const OFFSET_X: f32 = 1.0/2320.0;
+const OFFSET_Y: f32 = 1.0/1695.0;
+const SAMPLE_RATIO: f32 = 1.0;
 
 const VERTICES_TEX: &[Vertex_tex] = &[
 
-    Vertex_tex { position: [1.0 + 1.0 / 1920.0,  1.0 + 1.0 / 1080.0, 0.0], tex_coords: [1.0 ,0.0] },
-    Vertex_tex { position: [1.0 + 1.0 / 1920.0, -1.0 + 1.0 / 1080.0, 0.0], tex_coords: [1.0 ,1.0] },
-    Vertex_tex { position: [-1.0 + 1.0 / 1920.0,-1.0 + 1.0 / 1080.0, 0.0], tex_coords: [0.0 ,1.0] },
-    Vertex_tex { position: [-1.0 + 1.0 / 1920.0, -1.0 + 1.0 / 1080.0, 0.0], tex_coords:[0.0 ,1.0] },
-    Vertex_tex { position: [-1.0 + 1.0 / 1920.0, 1.0 + 1.0 / 1080.0, 0.0], tex_coords: [0.0 ,0.0] },
-    Vertex_tex { position: [1.0 + 1.0 / 1920.0, 1.0 + 1.0 / 1080.0, 0.0], tex_coords:  [1.0 ,0.0] },
+    Vertex_tex { position: [SAMPLE_RATIO + OFFSET_X ,  SAMPLE_RATIO + OFFSET_Y, 0.0], tex_coords: [1.0 ,0.0] },
+    Vertex_tex { position: [SAMPLE_RATIO + OFFSET_X , -SAMPLE_RATIO + OFFSET_Y, 0.0], tex_coords: [1.0 ,1.0] },
+    Vertex_tex { position: [-SAMPLE_RATIO +OFFSET_X ,-SAMPLE_RATIO  + OFFSET_Y, 0.0], tex_coords: [0.0 ,1.0] },
+    Vertex_tex { position: [-SAMPLE_RATIO +OFFSET_X , -SAMPLE_RATIO + OFFSET_Y, 0.0], tex_coords:[0.0 ,1.0] },
+    Vertex_tex { position: [-SAMPLE_RATIO +OFFSET_X , SAMPLE_RATIO  + OFFSET_Y, 0.0], tex_coords: [0.0 ,0.0] },
+    Vertex_tex { position: [SAMPLE_RATIO + OFFSET_X , SAMPLE_RATIO  + OFFSET_Y, 0.0], tex_coords:  [1.0 ,0.0] },
 
 ];
 
