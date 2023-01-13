@@ -53,6 +53,10 @@ impl Descriptor{
                     s = String::from("Welcome to ASYMPTOTE Industries (TM) !");
                 }
 
+                "/tab"=>{
+                    s = String::from("Psiprobe joined the game");
+
+                }
                 _=>{
                     s = String::from("Fail to parse command");
                 }
