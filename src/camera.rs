@@ -265,8 +265,12 @@ impl CameraController {
     pub fn update_camera(&mut self, camera: &mut Camera ,dt: Duration) {
 
         let dt = dt.as_secs_f32();
-        
-        self.yaw += self.rotate_horizontal;
+
+        //rotate when right pressed
+        if self.mouse_right_pressed {
+            self.yaw += self.rotate_horizontal;
+        }
+
         self.pos_x = Rad::sin(Rad(self.yaw*self.sensitivity))*self.radius;
         self.pos_z = Rad::cos(Rad(self.yaw*self.sensitivity))*self.radius;
 

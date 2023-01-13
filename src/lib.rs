@@ -2003,7 +2003,7 @@ pub async fn run() {
             winit::event::Event::DeviceEvent {
                 event: DeviceEvent::MouseMotion{ delta, },
                 .. 
-            } => if state.camera_controller.mouse_right_pressed 
+            } => 
             {
                 state.camera_controller.process_mouse_motion(delta.0, delta.1)
             }
