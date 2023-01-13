@@ -55,7 +55,7 @@ struct Vertex {
 const VERTICES: &[Vertex] = &[
 
     Vertex { position: [-0.0,  1.0,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-0.0, -1.0,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   }，
+    Vertex { position: [-0.0, -1.0,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
     
 ];                  
                     
@@ -604,6 +604,24 @@ impl State {
             }
         );
 
+        #[cfg(not(target_arch = "wasm32"))]
+        let msaa_texture = device.create_texture(
+            &wgpu::TextureDescriptor {
+                
+                size: wgpu::Extent3d {
+                    width: scr_width,
+                    height: scr_height,
+                    depth_or_array_layers: 1,
+                },
+                mip_level_count: 1, 
+                sample_count: 4,
+                dimension: wgpu::TextureDimension::D2,
+                format: wgpu::TextureFormat::Bgra8UnormSrgb,
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                label: Some("depth_texture"),
+            }
+        );
+
         #[cfg(target_arch = "wasm32")]
         let normal_texture = device.create_texture(
             &wgpu::TextureDescriptor {
@@ -646,20 +664,7 @@ impl State {
             }
         );
 
-        let depth_test_texture = device.create_texture(
-            &wgpu::TextureDescriptor {
-                
-                size: texture_size,
-                mip_level_count: 1, 
-                sample_count: 1,
-                dimension: wgpu::TextureDimension::D2,
-                format: wgpu::TextureFormat::Depth32Float,
-                usage: wgpu::TextureUsages::RENDER_ATTACHMENT
-                | wgpu::TextureUsages::TEXTURE_BINDING,
-                label: Some("depth_texture"),
-            }
-        );
-
+        #[cfg(target_arch = "wasm32")]
         let msaa_texture = device.create_texture(
             &wgpu::TextureDescriptor {
                 
@@ -673,6 +678,20 @@ impl State {
                 dimension: wgpu::TextureDimension::D2,
                 format: wgpu::TextureFormat::Rgba8UnormSrgb,
                 usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                label: Some("depth_texture"),
+            }
+        );
+
+        let depth_test_texture = device.create_texture(
+            &wgpu::TextureDescriptor {
+                
+                size: texture_size,
+                mip_level_count: 1, 
+                sample_count: 1,
+                dimension: wgpu::TextureDimension::D2,
+                format: wgpu::TextureFormat::Depth32Float,
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT
+                | wgpu::TextureUsages::TEXTURE_BINDING,
                 label: Some("depth_texture"),
             }
         );
