@@ -3,7 +3,7 @@ mod shell;
 mod command;
 mod geometry_lib;
 
-use cgmath::Rotation3;
+use cgmath::*;
 
 use shell::Controls;
 use shell::Message::{FrameUpdate,Update,ServerLog,CommandParsed};
@@ -54,34 +54,9 @@ struct Vertex {
 
 const VERTICES: &[Vertex] = &[
 
-    Vertex { position: [25.0,   -1.0,  25.0],      color: [0.55, 1.0, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, 25.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [25.0,   -1.0, 0.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [25.0,   -1.0, 0.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, 25.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, 0.0],        color: [1.0, 0.2, 0.2 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-
-    Vertex { position: [0.0,    -1.0,  25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-25.0,  -1.0, 25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, 0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, 0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-25.0,  -1.0, 25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-25.0,  -1.0, 0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-
-    Vertex { position: [25.0,   -1.0,  0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, 0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [25.0,   -1.0, -25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [25.0,   -1.0, -25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, 0.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, -25.0],      color: [0.3, 0.3, 0.3 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-
-    Vertex { position: [0.0,    -1.0,  0.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-25.0,  -1.0, 0.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, -25.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [0.0,    -1.0, -25.0],      color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-25.0,  -1.0, 0.0],     color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-25.0,  -1.0, -25.0],   color: [0.7, 0.7, 0.7 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-
+    Vertex { position: [-0.0,  1.0,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [-0.0, -1.0,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   }，
+    
 ];                  
                     
 const VERTICES_CUBE: &[Vertex] = &[                 
@@ -169,15 +144,18 @@ struct Vertex_tex {
     tex_coords: [f32; 2],
 }
 
+const OFFSET_X: f32 = 1.0/2320.0;
+const OFFSET_Y: f32 = 1.0/1695.0;
+const SAMPLE_RATIO: f32 = 1.0;
 
 const VERTICES_TEX: &[Vertex_tex] = &[
 
-    Vertex_tex { position: [1.0,  1.0, 0.0], tex_coords: [1.0 ,0.0] },
-    Vertex_tex { position: [1.0, -1.0, 0.0], tex_coords: [1.0 ,1.0] },
-    Vertex_tex { position: [-1.0,-1.0, 0.0], tex_coords: [0.0 ,1.0] },
-    Vertex_tex { position: [-1.0, -1.0, 0.0], tex_coords:[0.0 ,1.0] },
-    Vertex_tex { position: [-1.0, 1.0, 0.0], tex_coords: [0.0 ,0.0] },
-    Vertex_tex { position: [1.0, 1.0, 0.0], tex_coords:  [1.0 ,0.0] },
+    Vertex_tex { position: [SAMPLE_RATIO + OFFSET_X ,  SAMPLE_RATIO + OFFSET_Y, 0.0], tex_coords: [1.0 ,0.0] },
+    Vertex_tex { position: [SAMPLE_RATIO + OFFSET_X , -SAMPLE_RATIO + OFFSET_Y, 0.0], tex_coords: [1.0 ,1.0] },
+    Vertex_tex { position: [-SAMPLE_RATIO +OFFSET_X ,-SAMPLE_RATIO  + OFFSET_Y, 0.0], tex_coords: [0.0 ,1.0] },
+    Vertex_tex { position: [-SAMPLE_RATIO +OFFSET_X , -SAMPLE_RATIO + OFFSET_Y, 0.0], tex_coords:[0.0 ,1.0] },
+    Vertex_tex { position: [-SAMPLE_RATIO +OFFSET_X , SAMPLE_RATIO  + OFFSET_Y, 0.0], tex_coords: [0.0 ,0.0] },
+    Vertex_tex { position: [SAMPLE_RATIO + OFFSET_X , SAMPLE_RATIO  + OFFSET_Y, 0.0], tex_coords:  [1.0 ,0.0] },
 
 ];
 
@@ -201,11 +179,6 @@ impl Vertex_tex {
         }
     }
 }
-
-
-
-const NUM_INSTANCES_PER_ROW: i32 = 100;
-
 
 struct Instance {
     position: cgmath::Vector3<f32>,
@@ -259,31 +232,7 @@ impl InstanceRaw {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+const NUM_INSTANCES_PER_ROW: i32 = 1000;
 pub struct State {
 
     iced_state: program::State<shell::Controls>,
@@ -317,8 +266,7 @@ pub struct State {
     vertex_cube_buffer: wgpu::Buffer,
     vertex_center_buffer: wgpu::Buffer,
 
-    num_vertices: u32,
-    num_cube_vertices: u32,
+    num_vertices: u32,    num_cube_vertices: u32,
     num_center_vertices: u32,
 
     camera: camera::Camera,
@@ -343,8 +291,10 @@ pub struct State {
     normal_texture_view:wgpu::TextureView,
     depth_texture_view:wgpu::TextureView,
     depth_test_texture_view:wgpu::TextureView,
+    msaa_texture_view:wgpu::TextureView,
 
     instances: Vec<Instance>,
+    instance_data: Vec<InstanceRaw>,
     instance_buffer: wgpu::Buffer,
 
     renderer: Renderer,
@@ -359,6 +309,8 @@ pub struct State {
     depth_texture_flag: bool,
     output_texture_flag: bool,
     cli_flag: bool,
+
+    
 }
 impl State {
     async fn new(window: &Window,scr_width:u32,scr_height:u32) -> Self {
@@ -422,9 +374,13 @@ impl State {
                     .await
                     .expect("Request device"),
             )
+            
         });
+        
 
         let mut renderer =Renderer::new(Backend::new(&device, Settings::default(), format));
+
+        
 
         let mut debug = Debug::new();
 
@@ -450,10 +406,12 @@ impl State {
             &mut renderer,
             &mut debug,
         );
+        
+
 
         let texture_size = wgpu::Extent3d {
-            width: scr_width/2,
-            height: scr_height/2,
+            width: scr_width,
+            height: scr_height,
             depth_or_array_layers: 1,
         };
 
@@ -475,10 +433,12 @@ impl State {
             position: (0.0, 0.0, 0.0).into(),
             target: (0.0, 0.0, 0.0).into(),
             up: cgmath::Vector3::unit_y(),
-            aspect: scr_width as f32 / scr_height as f32,
-            fovy: scr_height as f32 / 4.0 as f32,
-            znear: 1300.0,
-            zfar: 3750.0,
+            forward: cgmath::Vector3::unit_y(),
+            aspect: texture_size.width as f32 / texture_size.height as f32,
+            fovy: texture_size.height as f32 / 2.0 as f32,
+            znear: 1000.0,
+            zfar: 5100.0,
+            left: cgmath::Vector3::unit_y(),
         };
 
         let camera_controller = camera::CameraController::new(scr_width as f32 , scr_height as f32,300.0,0.002);
@@ -561,7 +521,7 @@ impl State {
 
         
         let light_uniform = LightUniform {
-            position: [200.0, 100.0, 200.0],
+            position: [150.0, 150.0, 0.0],
             _padding: 0,
             flag: [0.0,1.0,1.0],
             _padding0: 0,
@@ -699,19 +659,37 @@ impl State {
                 label: Some("depth_texture"),
             }
         );
+
+        let msaa_texture = device.create_texture(
+            &wgpu::TextureDescriptor {
+                
+                size: wgpu::Extent3d {
+                    width: scr_width,
+                    height: scr_height,
+                    depth_or_array_layers: 1,
+                },
+                mip_level_count: 1, 
+                sample_count: 4,
+                dimension: wgpu::TextureDimension::D2,
+                format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                label: Some("depth_texture"),
+            }
+        );
         
         let diffuse_texture_view = diffuse_texture.create_view(&wgpu::TextureViewDescriptor::default());
         let normal_texture_view = normal_texture.create_view(&wgpu::TextureViewDescriptor::default());
         let depth_texture_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
         let depth_test_texture_view = depth_test_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let msaa_texture_view = msaa_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         let normal_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
             address_mode_u: wgpu::AddressMode::Repeat,
             address_mode_v: wgpu::AddressMode::Repeat,
             address_mode_w: wgpu::AddressMode::Repeat,
-            mag_filter: wgpu::FilterMode::Nearest,
-            min_filter: wgpu::FilterMode::Nearest,
-            mipmap_filter: wgpu::FilterMode::Nearest,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::FilterMode::Linear,
             ..Default::default()
         });
 
@@ -719,9 +697,9 @@ impl State {
             address_mode_u: wgpu::AddressMode::Repeat,
             address_mode_v: wgpu::AddressMode::Repeat,
             address_mode_w: wgpu::AddressMode::Repeat,
-            mag_filter: wgpu::FilterMode::Nearest,
-            min_filter: wgpu::FilterMode::Nearest,
-            mipmap_filter: wgpu::FilterMode::Nearest,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::FilterMode::Linear,
             ..Default::default()
         });
 
@@ -729,9 +707,9 @@ impl State {
             address_mode_u: wgpu::AddressMode::Repeat,
             address_mode_v: wgpu::AddressMode::Repeat,
             address_mode_w: wgpu::AddressMode::Repeat,
-            mag_filter: wgpu::FilterMode::Nearest,
-            min_filter: wgpu::FilterMode::Nearest,
-            mipmap_filter: wgpu::FilterMode::Nearest,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::FilterMode::Linear,
             ..Default::default()
         });
 
@@ -981,10 +959,10 @@ impl State {
 
 
             primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList,
+                topology: wgpu::PrimitiveTopology::LineList,
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Front),
+                cull_mode: None,
                 // Setting this to anything other than Fill requires Features::NON_FILL_POLYGON_MODE
                 polygon_mode: wgpu::PolygonMode::Fill,
                 // Requires Features::DEPTH_CLIP_CONTROL
@@ -1058,7 +1036,7 @@ impl State {
             depth_stencil: None,
 
             multisample: wgpu::MultisampleState {
-                count: 1,
+                count: 4,
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
@@ -1105,7 +1083,7 @@ impl State {
             depth_stencil: None,
 
             multisample: wgpu::MultisampleState {
-                count: 1,
+                count: 4,
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
@@ -1446,19 +1424,27 @@ impl State {
         
 
         let instances = (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(|z| {
-            (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |x| {
-                let position = cgmath::Vector3 { x:(x*50) as f32, y: 0.0, z: (z*50) as f32 } ;
-                Instance {
-                    position,
-                }
-            })
-        }).collect::<Vec<_>>();
+                        (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |x| {
+                        
+                            
+                            let position = cgmath::Vector3 { x:x as f32, y:0 as f32 , z:z as f32 } ;
+                            //+ 20.0*Rad::sin(Rad(x as f32 * x as f32 / 20.0+z as f32 / 20.0)) as f32
+                            Instance {
+                                position,
+                            }
+                        
+                        })
+                    }).collect::<Vec<_>>();
+
+                    
+        
         let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+
         let instance_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
             label: Some("Instance Buffer"),
             contents: bytemuck::cast_slice(&instance_data),
-            usage: wgpu::BufferUsages::VERTEX,
+            usage: wgpu::BufferUsages::VERTEX|wgpu::BufferUsages::COPY_DST,
         });
 
         let num_vertices = VERTICES.len() as u32;
@@ -1528,6 +1514,7 @@ impl State {
             depth_texture_view,
             normal_texture_view,
             depth_test_texture_view,
+            msaa_texture_view,
 
             instances,
             instance_buffer,
@@ -1544,6 +1531,8 @@ impl State {
             diffuse_texture_flag,
             depth_texture_flag,
             output_texture_flag,
+
+            instance_data,
 
         }
 
@@ -1567,11 +1556,11 @@ impl State {
 
     fn input(&mut self, event: &WindowEvent) -> bool {
         self.camera_controller.process_events(event);
-        if self.camera_controller.is_slash_pressed && !self.cli_flag{
+        if self.camera_controller.is_cli_pressed && !self.cli_flag{
             self.cli_flag = !self.cli_flag;
             self.cli_status = !self.cli_status;
         }
-        if self.camera_controller.is_slash_released{
+        if self.camera_controller.is_cli_released{
             self.cli_flag = false;
         }
         true
@@ -1599,17 +1588,41 @@ impl State {
         );
 
         let old_position: cgmath::Vector3<_> = self.light_uniform.position.into();
+
+        
         self.light_uniform.position =
                 (cgmath::Quaternion::from_axis_angle((0.0, 1.0, 0.0).into(), cgmath::Deg(1.0))
                 * old_position)
                 .into();
+        self.light_uniform.position[1] = 150.0 + 50.0*Rad::sin(Rad(self.light_uniform.position[0] /100.0 as f32));
         self.queue.write_buffer(&self.light_buffer, 0, bytemuck::cast_slice(&[self.light_uniform]));
+/* 
+        self.instances = (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(|z| {
+            (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |x| {
+            
+                
+                let position = cgmath::Vector3 { x:x as f32, y: x as f32 , z:z as f32 } ;
+                //+ 20.0*Rad::sin(Rad(x as f32 * x as f32 / 20.0+z as f32 / 20.0)) as f32
+                Instance {
+                    position,
+                }
+            
+            })
+        }).collect::<Vec<_>>();
+
+        
+
+        self.instance_data = self.instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+        self.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&self.instance_data));
+*/  
+        
 
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
 
         let output = self.surface.get_current_texture()?;
+        
         let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         let mut normal_encoder = self
@@ -1795,8 +1808,8 @@ impl State {
             let mut render_pass = surface_encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("Render Pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
+                    view: &self.msaa_texture_view,
+                    resolve_target: Some(&view),
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(
                             wgpu::Color {
@@ -1989,7 +2002,7 @@ pub async fn run() {
             winit::event::Event::DeviceEvent {
                 event: DeviceEvent::MouseMotion{ delta, },
                 .. 
-            } => if state.camera_controller.mouse_right_pressed 
+            } => 
             {
                 state.camera_controller.process_mouse_motion(delta.0, delta.1)
             }
@@ -2050,8 +2063,6 @@ pub async fn run() {
             }
 
             winit::event::Event::RedrawRequested(window_id) if window_id == window.id() => {
-
-
                 let now = Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
