@@ -156,16 +156,16 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
     if((depth.x - depth_down.x) < -0.02|| (depth.x - depth_left.x) < -0.02|| (depth.x - depth_right.x) < -0.02|| (depth.x - depth_up.x) < -0.02){
 
-        return diffuse * 2.0;
+        return vec4<f32>(1.0,1.0,1.0,1.0);
 
     }else if(normal.x != normal_left.x || normal.y != normal_left.y ||normal.z != normal_left.z){
 
-        return diffuse * 2.0;
+        return diffuse;
 
     }
     else if(normal.x != normal_down.x|| normal.y != normal_down.y||normal.z != normal_down.z){
 
-        return diffuse * 2.0;
+        return diffuse;
 
     }
     else if(tex_data.contrast > FXAA_ABSOLUTE_LUMA_THRESHOLD){
