@@ -1,7 +1,7 @@
 mod camera;
 mod shell;
 mod command;
-mod geometry_lib;
+mod chunk;
 
 use cgmath::*;
 
@@ -54,8 +54,8 @@ struct Vertex {
 
 const VERTICES: &[Vertex] = &[
 
-    Vertex { position: [-0.0,  1.0,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-0.0, -1.0,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [-0.0,  0.75,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [-0.0, -0.75,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
     
 ];                  
                     
@@ -146,16 +146,16 @@ struct Vertex_tex {
 
 const OFFSET_X: f32 = 0.0;
 const OFFSET_Y: f32 = 0.0;
-const SAMPLE_RATIO: f32 = 1.0;
+const SAMPLE_RATIO: f32 = 2.0;
 
 const VERTICES_TEX: &[Vertex_tex] = &[
 
-    Vertex_tex { position: [SAMPLE_RATIO + OFFSET_X ,  SAMPLE_RATIO + OFFSET_Y, 0.0], tex_coords: [1.0 ,0.0] },
-    Vertex_tex { position: [SAMPLE_RATIO + OFFSET_X , -SAMPLE_RATIO + OFFSET_Y, 0.0], tex_coords: [1.0 ,1.0] },
-    Vertex_tex { position: [-SAMPLE_RATIO +OFFSET_X ,-SAMPLE_RATIO  + OFFSET_Y, 0.0], tex_coords: [0.0 ,1.0] },
-    Vertex_tex { position: [-SAMPLE_RATIO +OFFSET_X , -SAMPLE_RATIO + OFFSET_Y, 0.0], tex_coords:[0.0 ,1.0] },
-    Vertex_tex { position: [-SAMPLE_RATIO +OFFSET_X , SAMPLE_RATIO  + OFFSET_Y, 0.0], tex_coords: [0.0 ,0.0] },
-    Vertex_tex { position: [SAMPLE_RATIO + OFFSET_X , SAMPLE_RATIO  + OFFSET_Y, 0.0], tex_coords:  [1.0 ,0.0] },
+    Vertex_tex { position: [SAMPLE_RATIO  + OFFSET_X ,  SAMPLE_RATIO + OFFSET_Y, 0.0], tex_coords: [1.0 ,0.0] },
+    Vertex_tex { position: [SAMPLE_RATIO  + OFFSET_X , -SAMPLE_RATIO + OFFSET_Y, 0.0], tex_coords: [1.0 ,1.0] },
+    Vertex_tex { position: [-SAMPLE_RATIO  +OFFSET_X ,-SAMPLE_RATIO  + OFFSET_Y, 0.0], tex_coords: [0.0 ,1.0] },
+    Vertex_tex { position: [-SAMPLE_RATIO  +OFFSET_X , -SAMPLE_RATIO + OFFSET_Y, 0.0], tex_coords:[0.0 ,1.0] },
+    Vertex_tex { position: [-SAMPLE_RATIO  +OFFSET_X , SAMPLE_RATIO  + OFFSET_Y, 0.0], tex_coords: [0.0 ,0.0] },
+    Vertex_tex { position: [SAMPLE_RATIO  + OFFSET_X , SAMPLE_RATIO  + OFFSET_Y, 0.0], tex_coords:  [1.0 ,0.0] },
 
 ];
 
@@ -182,6 +182,10 @@ impl Vertex_tex {
 
 struct Instance {
     position: cgmath::Vector3<f32>,
+    color: cgmath::Vector4<f32>,
+    is_active: bool,
+    depth_strength:f32,
+    normal_strength:f32,
 }
 
 // NEW!
@@ -189,6 +193,9 @@ impl Instance {
     fn to_raw(&self) -> InstanceRaw {
         InstanceRaw {
             model: (cgmath::Matrix4::from_translation(self.position)).into(),
+            color: [self.color.x,self.color.y,self.color.z,self.color.w],
+            depth_strength: self.depth_strength,
+            normal_strength: self.normal_strength,
         }
     }
 }
@@ -198,6 +205,9 @@ impl Instance {
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 struct InstanceRaw {
     model: [[f32; 4]; 4],
+    color: [f32; 4],
+    depth_strength: f32,
+    normal_strength:f32,
 }
 
 impl InstanceRaw {
@@ -212,7 +222,6 @@ impl InstanceRaw {
                     shader_location: 5,
                     format: wgpu::VertexFormat::Float32x4,
                 },
-                
                 wgpu::VertexAttribute {
                     offset: mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
                     shader_location: 6,
@@ -228,11 +237,26 @@ impl InstanceRaw {
                     shader_location: 8,
                     format: wgpu::VertexFormat::Float32x4,
                 },
+                wgpu::VertexAttribute {
+                    offset: mem::size_of::<[f32; 16]>() as wgpu::BufferAddress,
+                    shader_location: 9,
+                    format: wgpu::VertexFormat::Float32x4,
+                },
+                wgpu::VertexAttribute {
+                    offset: mem::size_of::<[f32; 20]>() as wgpu::BufferAddress,
+                    shader_location: 10,
+                    format: wgpu::VertexFormat::Float32,
+                },
+                wgpu::VertexAttribute {
+                    offset: mem::size_of::<[f32; 21]>() as wgpu::BufferAddress,
+                    shader_location: 11,
+                    format: wgpu::VertexFormat::Float32,
+                },
             ],
         }
     }
 }
-const NUM_INSTANCES_PER_ROW: i32 = 75;
+
 pub struct State {
 
     iced_state: program::State<shell::Controls>,
@@ -412,8 +436,8 @@ impl State {
 
 
         let texture_size = wgpu::Extent3d {
-            width: scr_width/2,
-            height: scr_height/2,
+            width: scr_width,
+            height: scr_height,
             depth_or_array_layers: 1,
         };
 
@@ -699,9 +723,9 @@ impl State {
             address_mode_u: wgpu::AddressMode::Repeat,
             address_mode_v: wgpu::AddressMode::Repeat,
             address_mode_w: wgpu::AddressMode::Repeat,
-            mag_filter: wgpu::FilterMode::Linear,
-            min_filter: wgpu::FilterMode::Linear,
-            mipmap_filter: wgpu::FilterMode::Linear,
+            mag_filter: wgpu::FilterMode::Nearest,
+            min_filter: wgpu::FilterMode::Nearest,
+            mipmap_filter: wgpu::FilterMode::Nearest,
             ..Default::default()
         });
 
@@ -709,9 +733,9 @@ impl State {
             address_mode_u: wgpu::AddressMode::Repeat,
             address_mode_v: wgpu::AddressMode::Repeat,
             address_mode_w: wgpu::AddressMode::Repeat,
-            mag_filter: wgpu::FilterMode::Linear,
-            min_filter: wgpu::FilterMode::Linear,
-            mipmap_filter: wgpu::FilterMode::Linear,
+            mag_filter: wgpu::FilterMode::Nearest,
+            min_filter: wgpu::FilterMode::Nearest,
+            mipmap_filter: wgpu::FilterMode::Nearest,
             ..Default::default()
         });
 
@@ -719,9 +743,9 @@ impl State {
             address_mode_u: wgpu::AddressMode::Repeat,
             address_mode_v: wgpu::AddressMode::Repeat,
             address_mode_w: wgpu::AddressMode::Repeat,
-            mag_filter: wgpu::FilterMode::Linear,
-            min_filter: wgpu::FilterMode::Linear,
-            mipmap_filter: wgpu::FilterMode::Linear,
+            mag_filter: wgpu::FilterMode::Nearest,
+            min_filter: wgpu::FilterMode::Nearest,
+            mipmap_filter: wgpu::FilterMode::Nearest,
             ..Default::default()
         });
 
@@ -1591,24 +1615,69 @@ impl State {
 
 
 
+        let chunk_manager = chunk::ChunkManager::new();
+
 
         
+        let instances = chunk_manager.chunk_list.iter()
+        //.filter(|x| x.is_active)
+        .flat_map( |chunk|{
 
-        let instances = (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(|z| {
-                        (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(move |y| {
-                            (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |x| {
+            (0..8).flat_map(move |x| {
+                (0..8).flat_map(move |y| {
+                    (0..8).map(move |z| {
+
+                            let is_active = chunk.voxeldata[x][y][z].is_active;
+
+                            let xoffset = (chunk.position[0]*8) as i32;
+                            let yoffset = (chunk.position[1]*8) as i32;
+                            let zoffset = (chunk.position[2]*8) as i32;
                         
+                        
+                            let voxel_color = chunk.voxeldata[x][y][z].color;
+                            let color= cgmath::Vector4 {x:voxel_color[0],y:voxel_color[1],z:voxel_color[2],w:voxel_color[3]};
+                            let position = cgmath::Vector3 { x:(x as i32 + xoffset) as f32, y:(y as i32 + yoffset )as f32, z:(z as i32+ zoffset) as f32 } ;
+                            let depth_strength = chunk.voxeldata[x][y][z].depth_strength;
+                            let normal_strength = chunk.voxeldata[x][y][z].normal_strength;
+
+                        Instance {
+                            is_active,
+                            position,
+                            color,
+                            depth_strength,
+                            normal_strength,
+                        } 
+                    }) 
                             
-                            let position = cgmath::Vector3 { x:x as f32, y:y as f32 , z:z as f32 } ;
-                            //+ 20.0*Rad::sin(Rad(x as f32 * x as f32 / 20.0+z as f32 / 20.0)) as f32
-                            Instance {
-                                position,
-                            }
+                    })
+                })
+            })
 
-                            })
-                        })
-                    }).collect::<Vec<_>>();
+        .filter(|v| v.is_active)
+        .collect::<Vec<_>>();
 
+
+        
+        //let instances = (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(|z| {
+        //                //(-0..1).flat_map(move |y| {
+        //                    (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |x| {
+        //                
+        //                    
+        //                    let position = cgmath::Vector3 { x:x as f32, y:0 as f32 , z:z as f32 } ;
+        //                    let color = cgmath::Vector4{x:1.0,y:1.0,z:1.0,w:1.0};
+        //                    //let color = cgmath::Vector3 { x:(x as f32 + 1000.0) / 2000.0, y:0.9 as f32 , z:(z as f32 + 1000.0) / 2000.0} ;
+        //                    //+ 20.0*Rad::sin(Rad(x as f32 * x as f32 / 20.0+z as f32 / 20.0)) as f32
+        //                    let is_active = true;
+        //                    Instance {
+        //                        position,
+        //                        color,
+        //                        is_active,
+        //                    }
+//
+        //                    })
+        //                //)
+        //            }).collect::<Vec<_>>();
+ 
                     
         
         let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
@@ -1769,27 +1838,35 @@ impl State {
                 (cgmath::Quaternion::from_axis_angle((0.0, 1.0, 0.0).into(), cgmath::Deg(1.0))
                 * old_position)
                 .into();
+
         self.light_uniform.position[1] = 150.0 + 50.0*Rad::sin(Rad(self.light_uniform.position[0] /100.0 as f32));
         self.queue.write_buffer(&self.light_buffer, 0, bytemuck::cast_slice(&[self.light_uniform]));
-/* 
-        self.instances = (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(|z| {
-            (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |x| {
-            
-                
-                let position = cgmath::Vector3 { x:x as f32, y: x as f32 , z:z as f32 } ;
-                //+ 20.0*Rad::sin(Rad(x as f32 * x as f32 / 20.0+z as f32 / 20.0)) as f32
-                Instance {
-                    position,
-                }
-            
-            })
-        }).collect::<Vec<_>>();
-
+        
+        //self.instances = (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(|z| {
+        //    (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |x| {
+        //    
+//
+        //        
+        //        //let position = cgmath::Vector3 { x: x as f32, y:30.0 *Rad::sin(Rad(old_position.x * x as f32 * z as f32/2000000.0)),z: z as f32 } ;
+        //        //+ 20.0*Rad::sin(Rad(x as f32 * x as f32 / 20.0+z as f32 / 20.0)) as f32
+        //        let color = cgmath::Vector3{x:0.0,y:0.0,z:0.0};
+        //        //let color = cgmath::Vector3 { x:(x as f32 + 300.0 + old_position.x/2.0) / 400.0 , y:0.9 as f32 , z:(z as f32 + 300.0 + old_position.z/2.0) / 400.0};
+        //        Instance {
+        //            position,
+        //            color,
+        //        }
+        //    
+        //    })
+        //}).collect::<Vec<_>>();
+        
         
 
         self.instance_data = self.instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
-        self.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&self.instance_data));
-*/  
+        //self.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&self.instance_data));
+ 
+        
+
+        
         
 
     }

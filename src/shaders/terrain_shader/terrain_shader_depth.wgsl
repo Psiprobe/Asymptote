@@ -19,6 +19,7 @@ struct VertexInput {
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
     @location(0) color: vec4<f32>,
+    @location(1) depth_strength: f32,
 };
 
 struct InstanceInput {
@@ -26,6 +27,9 @@ struct InstanceInput {
     @location(6) model_matrix_1: vec4<f32>,
     @location(7) model_matrix_2: vec4<f32>,
     @location(8) model_matrix_3: vec4<f32>,
+    @location(9) color: vec4<f32>,
+    @location(10) depth_strength:f32,
+    @location(11) normal_strength:f32,
 };
 
 @vertex
@@ -44,6 +48,7 @@ fn vs_main(
     var out: VertexOutput;
 
     out.clip_position =  camera.view_proj * model_matrix *vec4<f32>(model.position, 1.0);
+    out.depth_strength = instance.depth_strength;
     return out;
 }
 
@@ -58,5 +63,11 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
     //let normalized_depth = in.clip_position.z * in.clip_position.z * 8.333 - 0.13; 
 
-    return vec4<f32>(vec3<f32>((linear_depth  * linear_depth- near * near)/(far * far  - near * near)),1.0);
+    if(in.depth_strength == 0.0){
+        return vec4<f32>(1.0,1.0,1.0,1.0);
+    }
+    else{
+        return vec4<f32>(vec3<f32>((linear_depth  * linear_depth- near * near)/(far * far  - near * near)),1.0) * (2.0 - 2.0 * in.depth_strength);
+    }
+    
 }
