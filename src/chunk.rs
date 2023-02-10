@@ -14,7 +14,7 @@ impl ChunkManager{
         let mut chunk_list:Vec<Chunk> = Default::default();
 
         for x in 0..RADIUS_CHUNK{
-            for y in 0..2{
+            for y in 0..1{
                 for z in 0..RADIUS_CHUNK{
 
                     let chunk_pos_x = x - RADIUS_CHUNK/2;
@@ -67,7 +67,7 @@ impl Chunk{
 
                 
                     let position= cgmath::Vector3 { x:(x as i32 - RADIUS_VOXEL/2 + chunk_position[0] * RADIUS_VOXEL) as f32, y:0.0 as f32, z:(z as i32 - RADIUS_VOXEL/2 + chunk_position[2] * RADIUS_VOXEL) as f32} ;
-                    let color= cgmath::Vector4 {x:0.0,y:1.0,z:0.0,w:1.0};
+                    let color= cgmath::Vector4 {x:0.0,y:0.5,z:0.0,w:1.0};
                     let mut is_active = false;
                     if y == 0 && (position.x % 64.0 == 0.0 || position.z % 64.0 == 0.0){
                         is_active = true;
