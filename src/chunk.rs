@@ -14,7 +14,7 @@ impl ChunkManager{
         let mut chunk_list:Vec<Chunk> = Default::default();
 
         for x in 0..RADIUS_CHUNK{
-            for y in 0..1{
+            for y in 0..2{
                 for z in 0..RADIUS_CHUNK{
 
                     let chunk_pos_x = x - RADIUS_CHUNK/2;
