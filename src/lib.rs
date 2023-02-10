@@ -1379,7 +1379,7 @@ impl State {
 
             self.chunk_manager.chunk_list.iter().for_each(|c|{
                 render_pass_normal.set_vertex_buffer(1, c.buffer_data.slice(..));
-                render_pass_normal.draw(0..self.num_vertices, 0..c.instance_data.len() as _);
+                render_pass_normal.draw(0..self.num_vertices, 0..c.instance_len as _);
             });
 
             //render_pass_normal.set_pipeline(&self.render_line_normal_pipeline);
@@ -1444,7 +1444,7 @@ impl State {
 
             self.chunk_manager.chunk_list.iter().for_each(|c|{
                 render_pass_depth.set_vertex_buffer(1, c.buffer_data.slice(..));
-                render_pass_depth.draw(0..self.num_vertices, 0..c.instance_data.len() as _);
+                render_pass_depth.draw(0..self.num_vertices, 0..c.instance_len as _);
             });
                 
             
@@ -1514,7 +1514,7 @@ impl State {
 
             self.chunk_manager.chunk_list.iter().for_each(|c|{
                 render_pass_diffuse.set_vertex_buffer(1, c.buffer_data.slice(..));
-                render_pass_diffuse.draw(0..self.num_vertices, 0..c.instance_data.len() as _);
+                render_pass_diffuse.draw(0..self.num_vertices, 0..c.instance_len as _);
             });
 
             //render_pass_diffuse.set_pipeline(&self.render_line_pipeline);

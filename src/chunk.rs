@@ -2,8 +2,8 @@ use iced_wgpu::wgpu;
 use iced_wgpu::wgpu::util::DeviceExt;
 use crate::{Instance, InstanceRaw};
 
-const RADIUS:i32 = 32;
-
+const RADIUS_CHUNK:i32 = 32;
+const RADIUS_VOXEL:i32 = 64;
 pub struct ChunkManager{
     pub chunk_list:Vec<Chunk>,
 }
@@ -13,11 +13,18 @@ impl ChunkManager{
 
         let mut chunk_list:Vec<Chunk> = Default::default();
 
-        for x in 0..RADIUS{
+        for x in 0..RADIUS_CHUNK{
             for y in 0..1{
-                for z in 0..RADIUS{
+                for z in 0..RADIUS_CHUNK{
 
-                    chunk_list.push(Chunk::default(x - RADIUS/2, y, z - RADIUS/2, true,device));
+                    let chunk_pos_x = x - RADIUS_CHUNK/2;
+                    let chunk_pos_z = z - RADIUS_CHUNK/2;
+
+                    if((chunk_pos_x*chunk_pos_x + chunk_pos_z*chunk_pos_z )as f32).sqrt()> (RADIUS_CHUNK/2) as f32{
+                        continue
+                    }
+
+                    chunk_list.push(Chunk::default(chunk_pos_x, y, chunk_pos_z, true,device));
 
                 }
             }
@@ -36,9 +43,9 @@ impl ChunkManager{
 
 
 pub struct Chunk{
-    pub position:[i32;3],
+    //pub position:[i32;3],
     pub voxel_data:Vec<Instance>,
-    pub instance_data:Vec<InstanceRaw>,
+    pub instance_len:u32,
     pub buffer_data:wgpu::Buffer,
     pub is_active: bool,
     pub is_selected: bool,
@@ -50,22 +57,22 @@ impl Chunk{
 
         let chunk_position = [x,y,z];
         let mut voxel_data:Vec<Instance> = Default::default();
-        let mut instance_data:Vec<InstanceRaw> = Default::default();
+        let instance_data:Vec<InstanceRaw>;
 
         
 
-        for x in 0 ..RADIUS{
-            for y in 0 ..RADIUS{
-                for z in 0 ..RADIUS{
+        for x in 0 ..RADIUS_VOXEL{
+            for y in 0 ..1{
+                for z in 0 ..RADIUS_VOXEL{
 
                 
-                    let position= cgmath::Vector3 { x:(x as i32 - RADIUS/2 + chunk_position[0] * RADIUS) as f32, y:0.0 as f32, z:(z as i32 - RADIUS/2 + chunk_position[2] * RADIUS) as f32} ;
+                    let position= cgmath::Vector3 { x:(x as i32 - RADIUS_VOXEL/2 + chunk_position[0] * RADIUS_VOXEL) as f32, y:0.0 as f32, z:(z as i32 - RADIUS_VOXEL/2 + chunk_position[2] * RADIUS_VOXEL) as f32} ;
                     let color= cgmath::Vector4 {x:0.0,y:1.0,z:0.0,w:1.0};
                     let mut is_active = false;
                     if y == 0 && (position.x % 64.0 == 0.0 || position.z % 64.0 == 0.0){
                         is_active = true;
                     }
-                    voxel_data.resize((x * RADIUS * RADIUS + y * RADIUS + z ) as usize,Instance {
+                    voxel_data.resize((x * RADIUS_VOXEL + y + z ) as usize,Instance {
                         is_active,
                         position,
                         color,
@@ -83,11 +90,12 @@ impl Chunk{
             contents: bytemuck::cast_slice(&instance_data),
             usage: wgpu::BufferUsages::VERTEX|wgpu::BufferUsages::COPY_DST,
         });
+        let instance_len = instance_data.len() as u32;
 
         Self{
-            position:chunk_position,
+            //position:chunk_position,
             voxel_data,
-            instance_data,
+            instance_len,
             buffer_data,
             is_active,
             is_selected:false,
