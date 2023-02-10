@@ -282,20 +282,10 @@ pub struct State {
     render_terrain_normal_pipeline: wgpu::RenderPipeline,
     render_terrain_depth_pipeline: wgpu::RenderPipeline,
 
-    //render_line_pipeline: wgpu::RenderPipeline,
-    //render_line_normal_pipeline: wgpu::RenderPipeline,
-    //render_line_depth_pipeline: wgpu::RenderPipeline,
-    //render_triangle_pipeline: wgpu::RenderPipeline,
-    //render_triangle_normal_pipeline: wgpu::RenderPipeline,
-    //render_triangle_depth_pipeline: wgpu::RenderPipeline,
-
     vertex_buffer: wgpu::Buffer,
     vertex_tex_buffer: wgpu::Buffer,
-    vertex_cube_buffer: wgpu::Buffer,
-    vertex_center_buffer: wgpu::Buffer,
 
-    num_vertices: u32,    num_cube_vertices: u32,
-    num_center_vertices: u32,
+    num_vertices: u32,
 
     camera: camera::Camera,
     camera_controller: camera::CameraController,
@@ -1265,8 +1255,6 @@ impl State {
         let chunk_manager = chunk::ChunkManager::new(&device);
 
         let num_vertices = VERTICES.len() as u32;
-        let num_cube_vertices = VERTICES_CUBE.len() as u32;
-        let num_center_vertices = VERTICES_CENTER.len() as u32;
 
         //let view_sensitivity = 0.3;
 
@@ -1294,22 +1282,10 @@ impl State {
             render_terrain_normal_pipeline,
             render_terrain_depth_pipeline,
 
-            //render_line_pipeline,
-            //render_line_normal_pipeline,
-            //render_line_depth_pipeline,
-
-            //render_triangle_pipeline,
-            //render_triangle_normal_pipeline,
-            //render_triangle_depth_pipeline,
-
             vertex_buffer,
             vertex_tex_buffer,
-            vertex_cube_buffer,
-            vertex_center_buffer,
 
             num_vertices,
-            num_cube_vertices,
-            num_center_vertices,
 
             camera,
             camera_controller,
@@ -1426,80 +1402,7 @@ impl State {
         self.queue.write_buffer(&self.light_buffer, 0, bytemuck::cast_slice(&[self.light_uniform]));
 
 
-        //self.chunk_manager.chunk_list[]
-            //self.instances[]
-        /*
-        self.instances = self.chunk_manager.chunk_list.iter()
-        .filter(|chunk| chunk.is_active && chunk.position[0] > 64)
-        .flat_map( |chunk|{
-
-            (0..8).flat_map(move |x| {
-                (0..8).flat_map(move |y| {
-                    (0..8)
-
-                    .filter(move |z| chunk.voxeldata[x][y][*z].is_active)
-                    .map(move |z| {
-
-                            
-                            let xoffset = (chunk.position[0]*8) as i32;
-                            let yoffset = (chunk.position[1]*8) as i32;
-                            let zoffset = (chunk.position[2]*8) as i32;
-                        
-                        
-                            let voxel_color = chunk.voxeldata[x][y][z].color;
-                            let color= cgmath::Vector4 {x:voxel_color[0],y:voxel_color[1],z:voxel_color[2],w:voxel_color[3]};
-
-                        
-                            Instance {
-                                is_active:chunk.voxeldata[x][y][z].is_active,
-                                position:cgmath::Vector3 { x:(x as i32 + xoffset) as f32, y:(y as i32 + yoffset )as f32, z:(z as i32+ zoffset) as f32 },
-                                color,
-                                depth_strength:chunk.voxeldata[x][y][z].depth_strength,
-                                normal_strength:chunk.voxeldata[x][y][z].normal_strength,
-                            }
-                        
-                    }) 
-                            
-                    })
-                })
-            })
-
-        .collect::<Vec<_>>();
-         */
-
-        //self.instance_data = self.instances.iter().map(|v|
-        //    //todo
-        //    Instance::to_raw(v)
-        //).collect::<Vec<_>>();
-
-        //self.instance_buffer = self.device.create_buffer_init(
-        //    &wgpu::util::BufferInitDescriptor {
-        //    label: Some("Instance Buffer"),
-        //    contents: bytemuck::cast_slice(&self.instance_data),
-        //    usage: wgpu::BufferUsages::VERTEX|wgpu::BufferUsages::COPY_DST,
-        //});
-
         
-        //self.instances = (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(|z| {
-        //    (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |x| {
-        //    
-//
-        //        
-        //        //let position = cgmath::Vector3 { x: x as f32, y:30.0 *Rad::sin(Rad(old_position.x * x as f32 * z as f32/2000000.0)),z: z as f32 } ;
-        //        //+ 20.0*Rad::sin(Rad(x as f32 * x as f32 / 20.0+z as f32 / 20.0)) as f32
-        //        let color = cgmath::Vector3{x:0.0,y:0.0,z:0.0};
-        //        //let color = cgmath::Vector3 { x:(x as f32 + 300.0 + old_position.x/2.0) / 400.0 , y:0.9 as f32 , z:(z as f32 + 300.0 + old_position.z/2.0) / 400.0};
-        //        Instance {
-        //            position,
-        //            color,
-        //        }
-        //    
-        //    })
-        //}).collect::<Vec<_>>();
-        
-        
-
-        //self.instance_data = self.instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
         //self.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&self.instance_data));
  
         

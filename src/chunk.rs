@@ -1,6 +1,5 @@
 use iced_wgpu::wgpu;
 use iced_wgpu::wgpu::util::DeviceExt;
-use crate::State;
 use crate::{Instance, InstanceRaw};
 
 const RADIUS:i32 = 32;
