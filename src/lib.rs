@@ -54,8 +54,8 @@ struct Vertex {
 
 const VERTICES: &[Vertex] = &[
 
-    Vertex { position: [-0.0,  0.75,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-0.0, -0.75,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [-0.0,  0.70,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [-0.0, -0.70,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
     
 ];                  
                     
@@ -180,17 +180,19 @@ impl Vertex_tex {
     }
 }
 
-struct Instance {
+#[derive(Clone)]
+pub struct Instance {
+    is_active: bool,
     position: cgmath::Vector3<f32>,
     color: cgmath::Vector4<f32>,
-    is_active: bool,
     depth_strength:f32,
     normal_strength:f32,
 }
 
 // NEW!
 impl Instance {
-    fn to_raw(&self) -> InstanceRaw {
+    
+    pub fn to_raw(&self) -> InstanceRaw {
         InstanceRaw {
             model: (cgmath::Matrix4::from_translation(self.position)).into(),
             color: [self.color.x,self.color.y,self.color.z,self.color.w],
@@ -203,7 +205,7 @@ impl Instance {
 
 #[repr(C)]
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
-struct InstanceRaw {
+pub struct InstanceRaw {
     model: [[f32; 4]; 4],
     color: [f32; 4],
     depth_strength: f32,
@@ -319,10 +321,6 @@ pub struct State {
     depth_test_texture_view:wgpu::TextureView,
     msaa_texture_view:wgpu::TextureView,
 
-    instances: Vec<Instance>,
-    instance_data: Vec<InstanceRaw>,
-    instance_buffer: wgpu::Buffer,
-
     renderer: Renderer,
 
     cli_status: bool,
@@ -335,6 +333,8 @@ pub struct State {
     depth_texture_flag: bool,
     output_texture_flag: bool,
     cli_flag: bool,
+
+    chunk_manager:chunk::ChunkManager,
 
     
 }
@@ -1262,432 +1262,7 @@ impl State {
         });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        /* 
-        let render_line_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-
-            label: Some("Render Light Pipeline"),
-            layout: Some(&render_line_pipeline_layout),
-
-            vertex: wgpu::VertexState {
-                module: &line_shader,
-                entry_point: "vs_main",
-                buffers: &[Vertex::desc()],
-            },
-
-            fragment: Some(wgpu::FragmentState {
-                module: &line_shader,
-                entry_point: "fs_main",
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState {
-                        color: wgpu::BlendComponent::REPLACE,
-                        alpha: wgpu::BlendComponent::REPLACE,
-                    }),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-
-
-            primitive: wgpu::PrimitiveState {
-
-                topology: wgpu::PrimitiveTopology::LineList,
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Front),
-                polygon_mode: wgpu::PolygonMode::Fill,
-                unclipped_depth: false,
-                conservative: false,
-
-            },
-
-
-            depth_stencil: Some(wgpu::DepthStencilState {
-                format: wgpu::TextureFormat::Depth32Float,
-                depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::Less, // 1.
-                stencil: wgpu::StencilState::default(), // 2.
-                bias: wgpu::DepthBiasState::default(),
-            }),
-            multisample: wgpu::MultisampleState {
-                count: 1,
-                mask: !0,
-                alpha_to_coverage_enabled: false,
-            },
-            multiview: None,
-        });
-
-
-        let render_triangle_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-
-            label: Some("Render Light Pipeline"),
-            layout: Some(&render_triangle_pipeline_layout),
-
-            vertex: wgpu::VertexState {
-                module: &triangle_shader,
-                entry_point: "vs_main",
-                buffers: &[Vertex::desc()],
-            },
-
-            fragment: Some(wgpu::FragmentState {
-                module: &triangle_shader,
-                entry_point: "fs_main",
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState {
-                        color: wgpu::BlendComponent::OVER,
-                        alpha: wgpu::BlendComponent::REPLACE,
-                    }),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-
-
-            primitive: wgpu::PrimitiveState {
-
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: None,
-                polygon_mode: wgpu::PolygonMode::Fill,
-                unclipped_depth: false,
-                conservative: false,
-
-            },
-
-
-            depth_stencil: Some(wgpu::DepthStencilState {
-                format: wgpu::TextureFormat::Depth32Float,
-                depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::Less, // 1.
-                stencil: wgpu::StencilState::default(), // 2.
-                bias: wgpu::DepthBiasState::default(),
-            }),
-            multisample: wgpu::MultisampleState {
-                count: 1,
-                mask: !0,
-                alpha_to_coverage_enabled: false,
-            },
-            multiview: None,
-        });
-
-        let render_line_normal_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-
-            label: Some("Render Line Pipeline"),
-            layout: Some(&render_line_pipeline_layout),
-
-            vertex: wgpu::VertexState {
-                module: &line_shader_normal,
-                entry_point: "vs_main",
-                buffers: &[Vertex::desc()],
-            },
-
-            fragment: Some(wgpu::FragmentState {
-                module: &line_shader_normal,
-                entry_point: "fs_main",
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState {
-                        color: wgpu::BlendComponent::REPLACE,
-                        alpha: wgpu::BlendComponent::REPLACE,
-                    }),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-
-
-            primitive: wgpu::PrimitiveState {
-
-                topology: wgpu::PrimitiveTopology::LineList,
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Front),
-                polygon_mode: wgpu::PolygonMode::Fill,
-                unclipped_depth: false,
-                conservative: false,
-
-            },
-
-
-            depth_stencil: Some(wgpu::DepthStencilState {
-                format: wgpu::TextureFormat::Depth32Float,
-                depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::Less, 
-                stencil: wgpu::StencilState::default(),
-                bias: wgpu::DepthBiasState::default(),
-            }),
-            multisample: wgpu::MultisampleState {
-                count: 1,
-                mask: !0,
-                alpha_to_coverage_enabled: false,
-            },
-            multiview: None,
-        });
-
-        let render_triangle_normal_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-
-            label: Some("Render Light Pipeline"),
-            layout: Some(&render_triangle_pipeline_layout),
-
-            vertex: wgpu::VertexState {
-                module: &triangle_shader_normal,
-                entry_point: "vs_main",
-                buffers: &[Vertex::desc()],
-            },
-
-            fragment: Some(wgpu::FragmentState {
-                module: &triangle_shader_normal,
-                entry_point: "fs_main",
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-
-
-            primitive: wgpu::PrimitiveState {
-
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: None,
-                polygon_mode: wgpu::PolygonMode::Fill,
-                unclipped_depth: false,
-                conservative: false,
-
-            },
-
-
-            depth_stencil: Some(wgpu::DepthStencilState {
-                format: wgpu::TextureFormat::Depth32Float,
-                depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::Less,
-                stencil: wgpu::StencilState::default(),
-                bias: wgpu::DepthBiasState::default(),
-            }),
-            multisample: wgpu::MultisampleState {
-                count: 1,
-                mask: !0,
-                alpha_to_coverage_enabled: false,
-            },
-            multiview: None,
-        });
-
-        let render_line_depth_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-
-            label: Some("Render Line Depth Pipeline"),
-            layout: Some(&render_line_pipeline_layout),
-
-            vertex: wgpu::VertexState {
-                module: &line_shader_depth,
-                entry_point: "vs_main",
-                buffers: &[Vertex::desc()],
-            },
-
-            fragment: Some(wgpu::FragmentState {
-                module: &line_shader_depth,
-                entry_point: "fs_main",
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState {
-                        color: wgpu::BlendComponent::REPLACE,
-                        alpha: wgpu::BlendComponent::REPLACE,
-                    }),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-
-
-            primitive: wgpu::PrimitiveState {
-
-                topology: wgpu::PrimitiveTopology::LineList,
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Front),
-                polygon_mode: wgpu::PolygonMode::Fill,
-                unclipped_depth: false,
-                conservative: false,
-
-            },
-
-
-            depth_stencil: Some(wgpu::DepthStencilState {
-                format: wgpu::TextureFormat::Depth32Float,
-                depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::Less, 
-                stencil: wgpu::StencilState::default(),
-                bias: wgpu::DepthBiasState::default(),
-            }),
-            multisample: wgpu::MultisampleState {
-                count: 1,
-                mask: !0,
-                alpha_to_coverage_enabled: false,
-            },
-            multiview: None,
-        });
-
-        let render_triangle_depth_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-
-            label: Some("Render Triangle Depth Pipeline"),
-            layout: Some(&render_triangle_pipeline_layout),
-
-            vertex: wgpu::VertexState {
-                module: &triangle_shader_depth,
-                entry_point: "vs_main",
-                buffers: &[Vertex::desc()],
-            },
-
-            fragment: Some(wgpu::FragmentState {
-                module: &triangle_shader_depth,
-                entry_point: "fs_main",
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-
-
-            primitive: wgpu::PrimitiveState {
-
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: None,
-                polygon_mode: wgpu::PolygonMode::Fill,
-                unclipped_depth: false,
-                conservative: false,
-
-            },
-
-
-            depth_stencil: Some(wgpu::DepthStencilState {
-                format: wgpu::TextureFormat::Depth32Float,
-                depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::Less,
-                stencil: wgpu::StencilState::default(),
-                bias: wgpu::DepthBiasState::default(),
-            }),
-            multisample: wgpu::MultisampleState {
-                count: 1,
-                mask: !0,
-                alpha_to_coverage_enabled: false,
-            },
-            multiview: None,
-        });
-
-        */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        let chunk_manager = chunk::ChunkManager::new();
-
-
-        
-        let instances = chunk_manager.chunk_list.iter()
-        //.filter(|x| x.is_active)
-        .flat_map( |chunk|{
-
-            (0..8).flat_map(move |x| {
-                (0..8).flat_map(move |y| {
-                    (0..8).map(move |z| {
-
-                            let is_active = chunk.voxeldata[x][y][z].is_active;
-
-                            let xoffset = (chunk.position[0]*8) as i32;
-                            let yoffset = (chunk.position[1]*8) as i32;
-                            let zoffset = (chunk.position[2]*8) as i32;
-                        
-                        
-                            let voxel_color = chunk.voxeldata[x][y][z].color;
-                            let color= cgmath::Vector4 {x:voxel_color[0],y:voxel_color[1],z:voxel_color[2],w:voxel_color[3]};
-                            let position = cgmath::Vector3 { x:(x as i32 + xoffset) as f32, y:(y as i32 + yoffset )as f32, z:(z as i32+ zoffset) as f32 } ;
-                            let depth_strength = chunk.voxeldata[x][y][z].depth_strength;
-                            let normal_strength = chunk.voxeldata[x][y][z].normal_strength;
-
-                        Instance {
-                            is_active,
-                            position,
-                            color,
-                            depth_strength,
-                            normal_strength,
-                        } 
-                    }) 
-                            
-                    })
-                })
-            })
-
-        .filter(|v| v.is_active)
-        .collect::<Vec<_>>();
-
-
-        
-        //let instances = (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(|z| {
-        //                //(-0..1).flat_map(move |y| {
-        //                    (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |x| {
-        //                
-        //                    
-        //                    let position = cgmath::Vector3 { x:x as f32, y:0 as f32 , z:z as f32 } ;
-        //                    let color = cgmath::Vector4{x:1.0,y:1.0,z:1.0,w:1.0};
-        //                    //let color = cgmath::Vector3 { x:(x as f32 + 1000.0) / 2000.0, y:0.9 as f32 , z:(z as f32 + 1000.0) / 2000.0} ;
-        //                    //+ 20.0*Rad::sin(Rad(x as f32 * x as f32 / 20.0+z as f32 / 20.0)) as f32
-        //                    let is_active = true;
-        //                    Instance {
-        //                        position,
-        //                        color,
-        //                        is_active,
-        //                    }
-//
-        //                    })
-        //                //)
-        //            }).collect::<Vec<_>>();
- 
-                    
-        
-        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
-
-        let instance_buffer = device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-            label: Some("Instance Buffer"),
-            contents: bytemuck::cast_slice(&instance_data),
-            usage: wgpu::BufferUsages::VERTEX|wgpu::BufferUsages::COPY_DST,
-        });
+        let chunk_manager = chunk::ChunkManager::new(&device);
 
         let num_vertices = VERTICES.len() as u32;
         let num_cube_vertices = VERTICES_CUBE.len() as u32;
@@ -1760,9 +1335,6 @@ impl State {
             depth_test_texture_view,
             msaa_texture_view,
 
-            instances,
-            instance_buffer,
-
             renderer,
 
             cli_status,
@@ -1776,7 +1348,7 @@ impl State {
             depth_texture_flag,
             output_texture_flag,
 
-            instance_data,
+            chunk_manager,
 
         }
 
@@ -1810,6 +1382,17 @@ impl State {
         true
     }
 
+
+
+
+
+
+
+
+
+
+
+
     fn update(&mut self, dt: std::time::Duration) {
 
         self.camera_controller.update_camera(&mut self.camera, dt);
@@ -1841,6 +1424,61 @@ impl State {
 
         self.light_uniform.position[1] = 150.0 + 50.0*Rad::sin(Rad(self.light_uniform.position[0] /100.0 as f32));
         self.queue.write_buffer(&self.light_buffer, 0, bytemuck::cast_slice(&[self.light_uniform]));
+
+
+        //self.chunk_manager.chunk_list[]
+            //self.instances[]
+        /*
+        self.instances = self.chunk_manager.chunk_list.iter()
+        .filter(|chunk| chunk.is_active && chunk.position[0] > 64)
+        .flat_map( |chunk|{
+
+            (0..8).flat_map(move |x| {
+                (0..8).flat_map(move |y| {
+                    (0..8)
+
+                    .filter(move |z| chunk.voxeldata[x][y][*z].is_active)
+                    .map(move |z| {
+
+                            
+                            let xoffset = (chunk.position[0]*8) as i32;
+                            let yoffset = (chunk.position[1]*8) as i32;
+                            let zoffset = (chunk.position[2]*8) as i32;
+                        
+                        
+                            let voxel_color = chunk.voxeldata[x][y][z].color;
+                            let color= cgmath::Vector4 {x:voxel_color[0],y:voxel_color[1],z:voxel_color[2],w:voxel_color[3]};
+
+                        
+                            Instance {
+                                is_active:chunk.voxeldata[x][y][z].is_active,
+                                position:cgmath::Vector3 { x:(x as i32 + xoffset) as f32, y:(y as i32 + yoffset )as f32, z:(z as i32+ zoffset) as f32 },
+                                color,
+                                depth_strength:chunk.voxeldata[x][y][z].depth_strength,
+                                normal_strength:chunk.voxeldata[x][y][z].normal_strength,
+                            }
+                        
+                    }) 
+                            
+                    })
+                })
+            })
+
+        .collect::<Vec<_>>();
+         */
+
+        //self.instance_data = self.instances.iter().map(|v|
+        //    //todo
+        //    Instance::to_raw(v)
+        //).collect::<Vec<_>>();
+
+        //self.instance_buffer = self.device.create_buffer_init(
+        //    &wgpu::util::BufferInitDescriptor {
+        //    label: Some("Instance Buffer"),
+        //    contents: bytemuck::cast_slice(&self.instance_data),
+        //    usage: wgpu::BufferUsages::VERTEX|wgpu::BufferUsages::COPY_DST,
+        //});
+
         
         //self.instances = (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).flat_map(|z| {
         //    (-NUM_INSTANCES_PER_ROW..NUM_INSTANCES_PER_ROW).map(move |x| {
@@ -1861,7 +1499,7 @@ impl State {
         
         
 
-        self.instance_data = self.instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+        //self.instance_data = self.instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
         //self.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&self.instance_data));
  
         
@@ -1917,9 +1555,11 @@ impl State {
             render_pass_normal.set_bind_group(1, &self.light_bind_group, &[]);
 
             render_pass_normal.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass_normal.set_vertex_buffer(1, self.instance_buffer.slice(..));
 
-            render_pass_normal.draw(0..self.num_vertices, 0..self.instances.len() as _);
+            self.chunk_manager.chunk_list.iter().for_each(|c|{
+                render_pass_normal.set_vertex_buffer(1, c.buffer_data.slice(..));
+                render_pass_normal.draw(0..self.num_vertices, 0..c.instance_data.len() as _);
+            });
 
             //render_pass_normal.set_pipeline(&self.render_line_normal_pipeline);
             //render_pass_normal.set_bind_group(0, &self.camera_bind_group, &[]); 
@@ -1980,9 +1620,14 @@ impl State {
             render_pass_depth.set_bind_group(1, &self.light_bind_group, &[]);
 
             render_pass_depth.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass_depth.set_vertex_buffer(1, self.instance_buffer.slice(..));
 
-            render_pass_depth.draw(0..self.num_vertices, 0..self.instances.len() as _);
+            self.chunk_manager.chunk_list.iter().for_each(|c|{
+                render_pass_depth.set_vertex_buffer(1, c.buffer_data.slice(..));
+                render_pass_depth.draw(0..self.num_vertices, 0..c.instance_data.len() as _);
+            });
+                
+            
+            
 
             //render_pass_depth.set_pipeline(&self.render_line_depth_pipeline);
             //render_pass_depth.set_bind_group(0, &self.camera_bind_group, &[]); 
@@ -2045,9 +1690,11 @@ impl State {
             render_pass_diffuse.set_bind_group(1, &self.light_bind_group, &[]);
 
             render_pass_diffuse.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass_diffuse.set_vertex_buffer(1, self.instance_buffer.slice(..));
 
-            render_pass_diffuse.draw(0..self.num_vertices, 0..self.instances.len() as _);
+            self.chunk_manager.chunk_list.iter().for_each(|c|{
+                render_pass_diffuse.set_vertex_buffer(1, c.buffer_data.slice(..));
+                render_pass_diffuse.draw(0..self.num_vertices, 0..c.instance_data.len() as _);
+            });
 
             //render_pass_diffuse.set_pipeline(&self.render_line_pipeline);
             //render_pass_diffuse.set_bind_group(0, &self.camera_bind_group, &[]); 

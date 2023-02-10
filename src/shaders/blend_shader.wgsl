@@ -93,8 +93,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     var FXAA_ABSOLUTE_LUMA_THRESHOLD = 0.01;
     var DEPTH_TEST_OFFSET = 0.01;
 
-
-
     let diffuse = textureSample(t_diffuse, s_diffuse, in.tex_coords);
     let diffuse_left = textureSample(t_diffuse, s_diffuse, in.tex_coords,vec2<i32>(-1,0));
     let diffuse_right = textureSample(t_diffuse, s_diffuse, in.tex_coords,vec2<i32>(1,0));
