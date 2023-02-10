@@ -59,57 +59,6 @@ const VERTICES: &[Vertex] = &[
     
 ];                  
                     
-const VERTICES_CUBE: &[Vertex] = &[                 
-    Vertex { position: [0.0,  0.0,  5.0],       color: [1.0, 1.0, 1.0, 0.1],         normal:[1.0, 0.0, 0.0],   },
-    Vertex { position: [0.0,  0.0, -5.0],       color: [1.0, 1.0, 1.0, 0.1],         normal:[1.0, 0.0, 0.0],   },
-    Vertex { position: [0.0,  10.0, -0.0],      color: [1.0, 1.0, 1.0, 0.1],         normal:[1.0, 0.0, 0.0],   },
-    Vertex { position: [0.0, -50.0, -0.0],      color: [1.0, 1.0, 1.0, 0.1],         normal:[1.0, 0.0, 0.0],   },
-];                  
-                    
-const VERTICES_CENTER: &[Vertex] = &[                   
-    Vertex { position: [10.0,  0.0,  50.0],     color: [0.0, 0.0, 0.0, 0.7],   normal: [1.0, 0.0, 0.0],  },
-    Vertex { position: [10.0,  0.0, -50.0],     color: [0.0, 0.0, 0.0, 0.7],   normal: [1.0, 0.0, 0.0],  },
-    Vertex { position: [10.0,  300.0, 50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [1.0, 0.0, 0.0],  },
-    Vertex { position: [10.0,  0.0,  -50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [1.0, 0.0, 0.0],  },
-    Vertex { position: [10.0, 300.0,  50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [1.0, 0.0, 0.0],  },
-    Vertex { position: [10.0,  300.0, -50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [1.0, 0.0, 0.0],  },
-
-    Vertex { position: [-10.0,  0.0, 50.0],     color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, 1.0],  },
-    Vertex { position: [10.0,  0.0,  50.0],     color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, 1.0],  },
-    Vertex { position: [-10.0,  300.0,  50.0],  color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, 1.0],  },
-    Vertex { position: [10.0,  0.0, 50.0],      color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, 1.0],  },
-    Vertex { position: [-10.0, 300.0,   50.0],  color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, 1.0],  },
-    Vertex { position: [10.0,  300.0,  50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, 1.0],  },
-
-    Vertex { position: [-10.0,  0.0, -50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, -1.0], },
-    Vertex { position: [10.0,  0.0,  -50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, -1.0], },
-    Vertex { position: [-10.0,  300.0,  -50.0], color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, -1.0], },
-    Vertex { position: [10.0,  0.0, -50.0],     color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, -1.0], },
-    Vertex { position: [-10.0, 300.0,   -50.0], color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, -1.0], },
-    Vertex { position: [10.0,  300.0,  -50.0],  color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 0.0, -1.0], },
-
-    Vertex { position: [-10.0,  300.0, 50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 1.0, 0.0],  },
-    Vertex { position: [10.0,   300.0,  50.0],  color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 1.0, 0.0],  },
-    Vertex { position: [-10.0,  300.0,  -50.0], color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 1.0, 0.0],  },
-    Vertex { position: [10.0,  300.0, 50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 1.0, 0.0],  },
-    Vertex { position: [-10.0, 300.0,   -50.0], color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 1.0, 0.0],  },
-    Vertex { position: [10.0,  300.0,  -50.0],  color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, 1.0, 0.0],  },
-
-    Vertex { position: [-10.0,  0.0, 50.0],     color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, -1.0, -0.0],},
-    Vertex { position: [10.0,  0.0,  50.0],     color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, -1.0, -0.0],},
-    Vertex { position: [-10.0,  0.0,  -50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, -1.0, -0.0],},
-    Vertex { position: [10.0,  0.0, 50.0],      color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, -1.0, -0.0],},
-    Vertex { position: [-10.0, 0.0,   -50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, -1.0, -0.0],},
-    Vertex { position: [10.0,  0.0,  -50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [0.0, -1.0, -0.0],},
-
-    Vertex { position: [-10.0,  0.0,  50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [-1.0, 0.0, 0.0], },
-    Vertex { position: [-10.0,  0.0, -50.0],    color: [0.0, 0.0, 0.0, 0.7],   normal: [-1.0, 0.0, 0.0], },
-    Vertex { position: [-10.0,  300.0, 50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [-1.0, 0.0, 0.0], },
-    Vertex { position: [-10.0,  0.0,  -50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [-1.0, 0.0, 0.0], },
-    Vertex { position: [-10.0, 300.0,  50.0],   color: [0.0, 0.0, 0.0, 0.7],   normal: [-1.0, 0.0, 0.0], },
-    Vertex { position: [-10.0,  300.0, -50.0],  color: [0.0, 0.0, 0.0, 0.7],   normal: [-1.0, 0.0, 0.0], },
-    
-];
 
 impl Vertex {
     fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
@@ -309,7 +258,7 @@ pub struct State {
     normal_texture_view:wgpu::TextureView,
     depth_texture_view:wgpu::TextureView,
     depth_test_texture_view:wgpu::TextureView,
-    msaa_texture_view:wgpu::TextureView,
+    //msaa_texture_view:wgpu::TextureView,
 
     renderer: Renderer,
 
@@ -620,6 +569,7 @@ impl State {
             }
         );
 
+        /* 
         #[cfg(not(target_arch = "wasm32"))]
         let msaa_texture = device.create_texture(
             &wgpu::TextureDescriptor {
@@ -632,6 +582,7 @@ impl State {
                 label: Some("depth_texture"),
             }
         );
+        */
 
         #[cfg(target_arch = "wasm32")]
         let normal_texture = device.create_texture(
@@ -674,7 +625,7 @@ impl State {
                 label: Some("depth_texture"),
             }
         );
-
+        /* 
         #[cfg(target_arch = "wasm32")]
         let msaa_texture = device.create_texture(
             &wgpu::TextureDescriptor {
@@ -688,7 +639,7 @@ impl State {
                 label: Some("depth_texture"),
             }
         );
-
+        */
         let depth_test_texture = device.create_texture(
             &wgpu::TextureDescriptor {
                 
@@ -707,7 +658,7 @@ impl State {
         let normal_texture_view = normal_texture.create_view(&wgpu::TextureViewDescriptor::default());
         let depth_texture_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
         let depth_test_texture_view = depth_test_texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let msaa_texture_view = msaa_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        //let msaa_texture_view = msaa_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         let normal_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
             address_mode_u: wgpu::AddressMode::Repeat,
@@ -897,18 +848,6 @@ impl State {
             usage: wgpu::BufferUsages::VERTEX,
         });
 
-        let vertex_cube_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Vertex Cube Buffer"),
-            contents: bytemuck::cast_slice(VERTICES_CUBE),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
-
-        let vertex_center_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Vertex Center Buffer"),
-            contents: bytemuck::cast_slice(VERTICES_CENTER),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
-
 
 
 
@@ -951,27 +890,6 @@ impl State {
                 push_constant_ranges: &[],
             }
         );
-
-        let render_line_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("Render Pipeline Layout"),
-            bind_group_layouts: &[
-                &camera_bind_group_layout,
-                &light_bind_group_layout,
-            ],
-            push_constant_ranges: &[],
-        });
-
-        let render_triangle_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("Render Pipeline Layout"),
-            bind_group_layouts: &[
-                &camera_bind_group_layout,
-                &light_bind_group_layout,
-            ],
-            push_constant_ranges: &[],
-        });
-
-
-
 
         let render_terrain_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("Render_terrain_pipeline"),
@@ -1309,7 +1227,7 @@ impl State {
             depth_texture_view,
             normal_texture_view,
             depth_test_texture_view,
-            msaa_texture_view,
+            //msaa_texture_view,
 
             renderer,
 
