@@ -129,6 +129,10 @@ impl Program for Controls {
                 Text::new("FPS: ".to_owned() + &self.fps.to_string())
                     .style(Color::from_rgb(1.0,1.0,1.0)).size(20),
             )
+            .push(
+                Text::new("TPS: ".to_owned() + &'0'.to_string())
+                    .style(Color::from_rgb(1.0,1.0,1.0)).size(20),
+            )
             .push(text_columns)  
             .into()
     }

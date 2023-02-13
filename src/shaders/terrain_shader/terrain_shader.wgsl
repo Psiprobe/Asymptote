@@ -55,12 +55,14 @@ fn vs_main(
 
     if( (model_matrix *vec4<f32>(model.position, 1.0)).xyz.z >= light.position.z / 3.0 - 4.0 && (model_matrix *vec4<f32>(model.position, 1.0)).xyz.z <= light.position.z /3.0 + 4.0)
     {
-        out.color = vec4<f32>(0.5,1.0,0.25,1.0);
+        //out.color = vec4<f32>(0.5,1.0,0.25,1.0);
+        out.color = vec4<f32>(diffuse_color[0],diffuse_color[1],diffuse_color[2],instance.color[3]);
     }
     else if ((model_matrix *vec4<f32>(model.position, 1.0)).xyz.x >= light.position.z / 3.0 - 4.0 && (model_matrix *vec4<f32>(model.position, 1.0)).xyz.x <= light.position.z /3.0 + 4.0){
-        out.color = vec4<f32>(0.5,1.0,0.25,1.0);
+        //out.color = vec4<f32>(0.5,1.0,0.25,1.0);
+        out.color = vec4<f32>(diffuse_color[0],diffuse_color[1],diffuse_color[2],instance.color[3]);
     }else{
-        out.color = vec4<f32>(diffuse_color[0],diffuse_color[1],diffuse_color[2],model.color[3]);
+        out.color = vec4<f32>(diffuse_color[0],diffuse_color[1],diffuse_color[2],instance.color[3]);
     }
     return out;
 }

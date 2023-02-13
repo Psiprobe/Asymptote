@@ -16,7 +16,7 @@ pub struct Camera {
     pub up: cgmath::Vector3<f32>,
     pub left: cgmath::Vector3<f32>,
     pub forward: cgmath::Vector3<f32>,
-    pub aspect: f32,
+    pub aspect: f32,  
     pub fovy: f32,
     pub znear: f32,
     pub zfar: f32,
@@ -60,7 +60,7 @@ impl Uniform {
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 
 pub struct CameraUniform {
-    view_proj: [[f32; 4]; 4],
+    view_proj: [[f32;4];4],
 }
 
 impl CameraUniform {
@@ -274,8 +274,8 @@ impl CameraController {
         self.pos_x = Rad::sin(Rad(self.yaw*self.sensitivity))*self.radius;
         self.pos_z = Rad::cos(Rad(self.yaw*self.sensitivity))*self.radius;
 
-        let forward = Vector3::new(self.pos_x, 0.0, self.pos_z).normalize();
-        camera.left = camera.up.cross(forward).normalize();
+        camera.forward = Vector3::new(self.pos_x, 0.0, self.pos_z).normalize();
+        camera.left = camera.up.cross(camera.forward).normalize();
 
         
 
@@ -293,7 +293,8 @@ impl CameraController {
             self.left_count += dt* self.speed;
         }
 
-        camera.position += (self.forward_count-self.forward_count%3.0) * forward;
+        //pixel glitch fix
+        camera.position += (self.forward_count-self.forward_count%3.0) * camera.forward;
         camera.position += (self.left_count-self.left_count%1.0) * camera.left;
 
         self.forward_count %= 3.0;
@@ -301,6 +302,7 @@ impl CameraController {
 
         self.aspect = self.scr_width /self.scr_height;
 
+        
         //camera accelerate calulate
         
         if  (self.x_offset / 2.0 - self.x_current).abs().sqrt() > 1.0 { //avoid glitching loop
@@ -323,11 +325,11 @@ impl CameraController {
         }
 
         //pixel glitch fix
-        camera.target = camera.position + (self.x_current - self.x_current%1.0) * camera.left + (self.y_current - self.y_current%3.0) * forward;
+        camera.target = camera.position + (self.x_current - self.x_current % 1.0) * camera.left + (self.y_current - self.y_current%3.0) * camera.forward;
 
         camera.eye = cgmath::Point3::new(self.pos_x,self.pos_y,self.pos_z)+(
             camera.target-cgmath::Point3::new(0.0,0.0,0.0)
-        );
+        ); 
         
         self.rotate_horizontal = 0.0;
         self.rotate_vertical = 0.0;
