@@ -20,6 +20,9 @@ impl ChunkManager{
     pub fn new(device:&wgpu::Device) -> Self{
 
         let mut chunk_list:Vec<Chunk> = Default::default();
+
+
+
         let w = 1.0;
 
         for x in 0..RADIUS_CHUNK{
@@ -50,11 +53,11 @@ impl ChunkManager{
     }
 
 
-    pub fn update(&mut self,device:&wgpu::Device,dt:Duration,camera:&Camera,mouse_pos_x:f64,mouse_pos_y:f64){
+    pub fn update(&mut self,device:&wgpu::Device,queue: &wgpu::Queue,dt:Duration,camera:&Camera,mouse_pos_x:f64,mouse_pos_y:f64,texture_size: wgpu::Extent3d){
 
-        let mouse_x = mouse_pos_x /2.0 - 480.0;
+        let mouse_x = mouse_pos_x / 2.0 - texture_size.width as f64 / 4.0;
 
-        let mouse_y = mouse_pos_y / 2.0 * 3.0 - 900.0;
+        let mouse_y = mouse_pos_y / 2.0 * 3.0 - texture_size.height as f64 / 4.0 * 3.0;
         
 
         if self.w > 1.0{
@@ -85,27 +88,31 @@ impl ChunkManager{
 
                 if camera_target_z > v_range_z_min as f32&& camera_target_z < v_range_z_max as f32{
 
-                let instance_data = c.voxel_data.iter_mut().map(|v|{
-                    if abs(v.position[0]) <=30.0 && abs(v.position[2]) <=30.0 {
-                        v.color.y = self.w;
+                let mut chunk = Chunk::default(c.position[0], c.position[1], c.position[2], true, device);
+
+                let instance_data = chunk.voxel_data.iter_mut().map(|v|{
+                    
+                        v.color.x = self.w;
+                        v.color.y = self.w/2.0;
+                        v.color.z = self.w/2.0;
                         v.depth_strength = 0.0;
                         Instance::to_raw(v)
-                    }
-                    else{
-                        Instance::to_raw(v)
-                    }
+                    
                     
                 }
                 ).collect::<Vec<_>>();
 
-                let buffer_data = device.create_buffer_init(
+                c.buffer_data = device.create_buffer_init(
                     &wgpu::util::BufferInitDescriptor {
                     label: Some("Instance Buffer"),
                     contents: bytemuck::cast_slice(&instance_data),
                     usage: wgpu::BufferUsages::VERTEX|wgpu::BufferUsages::COPY_DST,
                 });
 
-                c.buffer_data = buffer_data;
+                c.instance_len = instance_data.len() as u32;
+
+                
+                //queue.write_buffer(&c.buffer_data, 0, bytemuck::cast_slice(&instance_data));
 
             }
             }

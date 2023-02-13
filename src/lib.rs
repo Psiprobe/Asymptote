@@ -218,6 +218,7 @@ pub struct State {
     cursor_position: winit::dpi::PhysicalPosition<f64>,
     viewport: Viewport,
     debug: Debug,
+    texture_size: wgpu::Extent3d,
 
     surface: wgpu::Surface,
     device: wgpu::Device,
@@ -1186,6 +1187,7 @@ impl State {
             cursor_position,
             viewport,
             debug,
+            texture_size,
 
             surface,
             device,
@@ -1319,7 +1321,7 @@ impl State {
         self.light_uniform.position[1] = 150.0 + 50.0*Rad::sin(Rad(self.light_uniform.position[0] /100.0 as f32));
         self.queue.write_buffer(&self.light_buffer, 0, bytemuck::cast_slice(&[self.light_uniform]));
 
-        self.chunk_manager.update(&self.device,dt,&self.camera,self.cursor_position.x,self.cursor_position.y);
+        self.chunk_manager.update(&self.device,&self.queue,dt,&self.camera,self.cursor_position.x,self.cursor_position.y,self.texture_size);
 
 
         
