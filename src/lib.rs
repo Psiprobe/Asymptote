@@ -129,7 +129,7 @@ impl Vertex_tex {
     }
 }
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct Instance {
     is_active: bool,
     position: cgmath::Vector3<f32>,
@@ -910,7 +910,7 @@ impl State {
                 targets: &[Some(wgpu::ColorTargetState {
                     format: config.format,
                     blend: Some(wgpu::BlendState {
-                        color: wgpu::BlendComponent::OVER,
+                        color: wgpu::BlendComponent::REPLACE,
                         alpha: wgpu::BlendComponent::OVER,
                     }),
                     write_mask: wgpu::ColorWrites::ALL,
@@ -1321,7 +1321,7 @@ impl State {
         self.light_uniform.position[1] = 150.0 + 50.0*Rad::sin(Rad(self.light_uniform.position[0] /100.0 as f32));
         self.queue.write_buffer(&self.light_buffer, 0, bytemuck::cast_slice(&[self.light_uniform]));
 
-        self.chunk_manager.update(&self.device,&self.queue,dt,&self.camera,self.cursor_position.x,self.cursor_position.y,self.texture_size);
+        self.chunk_manager.update(&self.device,&self.queue,dt,&self.camera,&self.camera_controller,self.cursor_position.x,self.cursor_position.y,self.texture_size,);
 
 
         

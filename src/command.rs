@@ -17,6 +17,12 @@ impl Descriptor{
         let first = s.chars().nth(0);
         if  first == Some('/') {
             match &s as &str{
+                "/place" =>{
+
+                }
+                "/draw" =>{
+                    
+                }
                 "/diffuse"=>{
                     state.diffuse_texture_flag = true;
                     state.normal_texture_flag = false;
