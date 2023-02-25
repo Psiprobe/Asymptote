@@ -85,12 +85,14 @@ pub struct CameraController {
     speed: f32,
     sensitivity: f32,
     
-    is_up_pressed: bool,
-    is_down_pressed: bool,
-    is_forward_pressed: bool,
-    is_backward_pressed: bool,
-    is_left_pressed: bool,
-    is_right_pressed: bool,
+    pub is_up_pressed: bool,
+    pub is_down_pressed: bool,
+    pub is_forward_pressed: bool,
+    pub is_backward_pressed: bool,
+    pub is_left_pressed: bool,
+    pub is_right_pressed: bool,
+
+    pub is_control_pressed: bool,
 
     forward_count:f32,
     left_count:f32,
@@ -132,6 +134,8 @@ impl CameraController {
             is_down_pressed: false,
             is_forward_pressed: false,
             is_backward_pressed: false,
+
+            is_control_pressed:false,
 
             forward_count:0.0,
             left_count:0.0,
@@ -203,6 +207,10 @@ impl CameraController {
                     }
                     VirtualKeyCode::LShift => {
                         self.is_down_pressed = is_pressed;
+                        true
+                    }
+                    VirtualKeyCode::LControl=> {
+                        self.is_control_pressed = is_pressed;
                         true
                     }
                     VirtualKeyCode::W | VirtualKeyCode::Up => {

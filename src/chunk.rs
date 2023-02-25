@@ -185,65 +185,77 @@ impl ChunkManager{
         let camera_mouse_eye = camera.eye + (camera.forward * mouse_y as f32)  + (camera.left * mouse_x as f32);
         let camera_mouse_target = camera.target + (camera.forward * mouse_y as f32) + (camera.left * mouse_x as f32);
 
+        let mut camera_target_z = (31.0 - camera_mouse_eye.y) / (camera_mouse_eye.y - camera_mouse_target.y) * (camera_mouse_eye.z - camera_mouse_target.z) + camera_mouse_eye.z;
+        let mut camera_target_x = (31.0 - camera_mouse_eye.y) / (camera_mouse_eye.y - camera_mouse_target.y) * (camera_mouse_eye.x - camera_mouse_target.x) + camera_mouse_eye.x;
 
-
-        let camera_target_z = (31.0 - camera_mouse_eye.y) / (camera_mouse_eye.y - camera_mouse_target.y) * (camera_mouse_eye.z - camera_mouse_target.z) + camera_mouse_eye.z;
-        let camera_target_x = (31.0 - camera_mouse_eye.y) / (camera_mouse_eye.y - camera_mouse_target.y) * (camera_mouse_eye.x - camera_mouse_target.x) + camera_mouse_eye.x;
-
-        let indicator_first = [camera_target_x as i32 - RADIUS_VOXEL/2, 31 ,camera_target_z as i32 - RADIUS_VOXEL/2];
-        let indicator_last = [camera_target_x as i32 + RADIUS_VOXEL/2, 31 ,camera_target_z as i32 + RADIUS_VOXEL/2];
-
-        self.place(
-            self.previous_indicator_first,
-            self.previous_indicator_last,
-            [0.0,0.0,0.0,0.0],
-            true,
-            device,
-            ChunkType::UsrIndicator
-        );
-        self.previous_indicator_first = indicator_first;
-        self.previous_indicator_last = indicator_last;
-
-        self.place(
-            indicator_first,
-            indicator_last,
-            [0.0,self.w,0.0,0.0],
-            false,
-            device,
-            ChunkType::UsrIndicator
-        );
-
-        if camera_controller.mouse_left_pressed{
-            self.place(
-            indicator_first,
-            [camera_target_x as i32 + RADIUS_VOXEL/2, 64 ,camera_target_z as i32 + RADIUS_VOXEL/2],
-            [1.0,1.0,1.0,1.0],
-            false,
-            device,
-            ChunkType::Default
-            );
-        }
         
-
-
         self.chunk_list.iter_mut().for_each(|c|{
-
             let v_range_x_min = c.position[0] * RADIUS_VOXEL - RADIUS_VOXEL/2;
             let v_range_x_max = c.position[0] * RADIUS_VOXEL + RADIUS_VOXEL/2;
             let v_range_z_min = c.position[2] * RADIUS_VOXEL - RADIUS_VOXEL/2;
             let v_range_z_max = c.position[2] * RADIUS_VOXEL + RADIUS_VOXEL/2;
-
             
-
             if camera_target_x > v_range_x_min as f32&& camera_target_x < v_range_x_max as f32 && camera_target_z > v_range_z_min as f32&& camera_target_z < v_range_z_max as f32{
-
                 c.is_selected = true;
-                
+                if camera_controller.is_down_pressed{
+                    camera_target_x = (c.position[0] * RADIUS_VOXEL) as f32;
+                    camera_target_z = (c.position[2] * RADIUS_VOXEL) as f32;
+                }
             }
             else {
                 c.is_selected = false;
             }
         });
+        
+
+
+
+
+
+        let indicator_first = [camera_target_x as i32 - RADIUS_VOXEL/2, 31 ,camera_target_z as i32 - RADIUS_VOXEL/2];
+        let indicator_last = [camera_target_x as i32 + RADIUS_VOXEL/2, 31 ,camera_target_z as i32 + RADIUS_VOXEL/2];
+        
+        let mut delete = false;
+        let mut color = [0.0,self.w,0.0,self.w];
+
+        if camera_controller.is_control_pressed{
+            delete = true;
+            color = [self.w,0.0,0.0,self.w];
+        }
+
+        if camera_controller.mouse_left_pressed{
+            self.place(
+            indicator_first,
+            indicator_last,
+            [1.0,1.0,1.0,1.0],
+            delete,
+            device,
+            ChunkType::Default
+            );
+        }
+
+        self.place(
+            self.previous_indicator_first,
+            self.previous_indicator_last,
+            color,
+            true,
+            device,
+            ChunkType::UsrIndicator
+        );
+        
+        self.place(
+            [indicator_first[0],indicator_first[1]+1,indicator_first[2]],
+            [indicator_last[0],indicator_last[1]+1,indicator_last[2]],
+            color,
+            false,
+            device,
+            ChunkType::UsrIndicator
+        );
+
+        self.previous_indicator_first = [indicator_first[0],indicator_first[1]+1,indicator_first[2]];
+        self.previous_indicator_last = [indicator_last[0],indicator_last[1]+1,indicator_last[2]];
+
+        
     }
 }
 

@@ -5,6 +5,7 @@ mod chunk;
 
 use cgmath::*;
 
+use chunk::ChunkType;
 use shell::Controls;
 use shell::Message::{FrameUpdate,Update,ServerLog,CommandParsed};
 use command::Descriptor;
@@ -909,10 +910,7 @@ impl State {
                 entry_point: "fs_main",
                 targets: &[Some(wgpu::ColorTargetState {
                     format: config.format,
-                    blend: Some(wgpu::BlendState {
-                        color: wgpu::BlendComponent::REPLACE,
-                        alpha: wgpu::BlendComponent::OVER,
-                    }),
+                    blend: Some(wgpu::BlendState::PREMULTIPLIED_ALPHA_BLENDING),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
             }),
@@ -1517,8 +1515,17 @@ impl State {
             render_pass_diffuse.set_vertex_buffer(0, self.vertex_buffer.slice(..));
 
             self.chunk_manager.chunk_list.iter().for_each(|c|{
-                render_pass_diffuse.set_vertex_buffer(1, c.buffer_data.slice(..));
-                render_pass_diffuse.draw(0..self.num_vertices, 0..c.instance_len as _);
+                if c.current_type != ChunkType::UsrIndicator{
+                    render_pass_diffuse.set_vertex_buffer(1, c.buffer_data.slice(..));
+                    render_pass_diffuse.draw(0..self.num_vertices, 0..c.instance_len as _);
+                }
+            });
+
+            self.chunk_manager.chunk_list.iter().for_each(|c|{
+                if c.current_type == ChunkType::UsrIndicator{
+                    render_pass_diffuse.set_vertex_buffer(1, c.buffer_data.slice(..));
+                    render_pass_diffuse.draw(0..self.num_vertices, 0..c.instance_len as _);
+                }
             });
 
             //render_pass_diffuse.set_pipeline(&self.render_line_pipeline);
