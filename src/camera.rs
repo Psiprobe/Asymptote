@@ -1,5 +1,5 @@
 use cgmath::*;
-use iced_winit::winit::event::*;
+use iced_winit::winit::{event::*, dpi::PhysicalPosition};
 use std::time::Duration;
 
 #[rustfmt::skip]
@@ -91,6 +91,7 @@ pub struct CameraController {
     pub is_backward_pressed: bool,
     pub is_left_pressed: bool,
     pub is_right_pressed: bool,
+    pub is_tab_pressed: bool,
 
     pub is_control_pressed: bool,
 
@@ -109,6 +110,7 @@ pub struct CameraController {
     pub is_cli_pressed: bool,
     pub mouse_left_pressed: bool,
     pub mouse_right_pressed: bool,
+    pub scroll:f32,
 
     x_current: f32,
     y_current: f32,
@@ -134,6 +136,7 @@ impl CameraController {
             is_down_pressed: false,
             is_forward_pressed: false,
             is_backward_pressed: false,
+            is_tab_pressed: false,
 
             is_control_pressed:false,
 
@@ -145,6 +148,7 @@ impl CameraController {
             
             mouse_left_pressed: false,
             mouse_right_pressed: false,
+            scroll: 0.0,
 
             x_current:0.0,
             y_current:0.0,
@@ -213,6 +217,10 @@ impl CameraController {
                         self.is_control_pressed = is_pressed;
                         true
                     }
+                    VirtualKeyCode::Tab=> {
+                        self.is_tab_pressed = is_pressed;
+                        true
+                    }
                     VirtualKeyCode::W | VirtualKeyCode::Up => {
                         self.is_forward_pressed = is_pressed;
                         true
@@ -239,6 +247,13 @@ impl CameraController {
     pub fn process_mouse_motion(&mut self, mouse_dx: f64, mouse_dy: f64) {
         self.rotate_horizontal = mouse_dx as f32;
         self.rotate_vertical = mouse_dy as f32;
+    }
+    pub fn process_scroll(&mut self, delta: &MouseScrollDelta) {
+        self.scroll = match delta {
+            // I'm assuming a line is about 100 pixels
+            MouseScrollDelta::LineDelta(_, scroll) => -scroll * 0.5,
+            MouseScrollDelta::PixelDelta(PhysicalPosition { y: scroll, .. }) => -*scroll as f32,
+        };
     }
 
     pub fn process_mouse_position(&mut self, mouse_pos_x:f64,mouse_pos_y:f64){

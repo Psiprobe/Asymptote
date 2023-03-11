@@ -1,4 +1,5 @@
 use crate::State;
+use crate::chunk::ChunkType;
 use crate::shell;
 use shell::Message::{ServerLog,ChatMessage};
 pub struct Descriptor{
@@ -13,16 +14,158 @@ impl Descriptor{
     }
 
     pub fn parse_command(&self, state: &mut State){
+        
         let mut s = String::from(&self.text);
-        let first = s.chars().nth(0);
-        if  first == Some('/') {
-            match &s as &str{
+
+        let v: Vec<&str> = s.split(" ").collect();
+
+        let ch = v[0].chars().nth(0);
+
+        if ch == Some('/') {
+            let mut i = 1;
+
+            match v[0] as &str{
+
                 "/place" =>{
 
+                    let mut first = [0,0,0];
+                    let mut last = [0,0,0];
+                    let mut color = [0.0,0.0,0.0,0.0];
+                    let delete = false;
+
+                    if v.len() < 11 {
+                        s = String::from("Insufficient args");
+                    }
+                    else{
+                        while i < 11{
+
+                            if i >= 1 && i <=3{
+                                first[i-1] = v[i].parse::<i32>().unwrap();
+                            }
+
+                            if i >= 4 && i <=6{
+                                last[i-4] = v[i].parse::<i32>().unwrap();
+                            }
+
+                            if i >= 7 && i <= 10{
+                                color[i-7] = v[i].parse::<f32>().unwrap();
+                            }
+
+                            i = i + 1;
+
+                        }
+
+                        s = "Model placed at ".to_owned() 
+
+                        + &first[0].to_string()+ &' '.to_string()
+                        + &first[1].to_string()+ &' '.to_string()
+                        + &first[2].to_string()+ &' '.to_string()
+
+                        + &"; ".to_owned() 
+            
+                        + &last[0].to_string()+ &' '.to_string()
+                        + &last[1].to_string()+ &' '.to_string()
+                        + &last[2].to_string()+ &' '.to_string()
+                        
+                    }
+
+                    state.chunk_manager.place(first, last, color, delete, &state.device, ChunkType::Default, &mut state.iced_state);
+
                 }
+
+                "/delete" =>{
+
+                    let mut first = [0,0,0];
+                    let mut last = [0,0,0];
+                    let mut color = [0.0,0.0,0.0,0.0];
+                    let delete = true;
+
+                    if v.len() < 11 {
+                        s = String::from("Insufficient args");
+                    }
+                    else{
+                        while i < 11{
+
+                            if i >= 1 && i <=3{
+                                first[i-1] = v[i].parse::<i32>().unwrap();
+                            }
+
+                            if i >= 4 && i <=6{
+                                last[i-4] = v[i].parse::<i32>().unwrap();
+                            }
+
+                            if i >= 7 && i <= 10{
+                                color[i-7] = v[i].parse::<f32>().unwrap();
+                            }
+
+                            i = i + 1;
+
+                        }
+
+                        s = "Model deleted at ".to_owned() 
+                        + &first[0].to_string()+ &' '.to_string()
+                        + &first[1].to_string()+ &' '.to_string()
+                        + &first[2].to_string()+ &' '.to_string()
+
+                        + &"; ".to_owned() 
+            
+                        + &last[0].to_string()+ &' '.to_string()
+                        + &last[1].to_string()+ &' '.to_string()
+                        + &last[2].to_string()+ &' '.to_string()
+                        
+                    }
+
+                    state.chunk_manager.place(first, last, color, delete, &state.device, ChunkType::Default, &mut state.iced_state);
+
+                }
+
                 "/draw" =>{
-                    
+
+                    let mut first = [0,0,0];
+                    let mut last = [0,0,0];
+                    let mut color = [0.0,0.0,0.0,0.0];
+
+                    if v.len() < 11 {
+                        s = String::from("Insufficient args");
+                    }
+                    else{
+                        while i < 11{
+
+                            if i >= 1 && i <=3{
+                                first[i-1] = v[i].parse::<i32>().unwrap();
+                            }
+
+                            if i >= 4 && i <=6{
+                                last[i-4] = v[i].parse::<i32>().unwrap();
+                            }
+
+                            if i >= 7 && i <= 10{
+                                color[i-7] = v[i].parse::<f32>().unwrap();
+                            }
+
+                            i = i + 1;
+
+                        }
+
+                        s = "Model drawn at ".to_owned() 
+
+                        + &first[0].to_string()+ &' '.to_string()
+                        + &first[1].to_string()+ &' '.to_string()
+                        + &first[2].to_string()+ &' '.to_string()
+
+                        + &"; ".to_owned() 
+            
+                        + &last[0].to_string()+ &' '.to_string()
+                        + &last[1].to_string()+ &' '.to_string()
+                        + &last[2].to_string()+ &' '.to_string()
+
+                    }
+                    state.chunk_manager.draw(first, last, color, &state.device);
                 }
+                "/get"=>{
+                    s = String::from("");
+                }
+
                 "/diffuse"=>{
                     state.diffuse_texture_flag = true;
                     state.normal_texture_flag = false;
@@ -31,6 +174,7 @@ impl Descriptor{
                     s = String::from("Texture changed");
 
                 }
+
                 "/normal"=>{
                     state.diffuse_texture_flag = false;
                     state.normal_texture_flag = true;
@@ -55,14 +199,6 @@ impl Descriptor{
                     s = String::from("Texture changed");
                 }
 
-                "/test"=>{
-                    s = String::from("Welcome to ASYMPTOTE Industries (TM) !");
-                }
-
-                "/tab"=>{
-                    s = String::from("Psiprobe joined the game");
-
-                }
                 _=>{
                     s = String::from("Fail to parse command");
                 }

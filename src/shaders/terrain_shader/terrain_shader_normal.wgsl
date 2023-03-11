@@ -27,8 +27,9 @@ struct InstanceInput {
     @location(7) model_matrix_2: vec4<f32>,
     @location(8) model_matrix_3: vec4<f32>,
     @location(9) color: vec4<f32>,
-    @location(10) depth_strength:f32,
-    @location(11) normal_strength:f32,
+    @location(10) normal: vec3<f32>,
+    @location(11) depth_strength:f32,
+    @location(12) normal_strength:f32,
 };
 
 @vertex
@@ -53,15 +54,7 @@ fn vs_main(
     let rgb_color = vec3<f32>(model.color[0],model.color[1],model.color[2]);
     let diffuse_color = rgb_color *  diffuse_strength *  diffuse_strength;
 
-    if( (model_matrix *vec4<f32>(model.position, 1.0)).xyz.z >= light.position.z / 3.0 - 4.0 && (model_matrix *vec4<f32>(model.position, 1.0)).xyz.z <= light.position.z /3.0 + 4.0)
-    {
-        out.color = vec4<f32>(0.5,1.0,0.25,1.0);
-    }
-    else if ((model_matrix *vec4<f32>(model.position, 1.0)).xyz.x >= light.position.z / 3.0 - 4.0 && (model_matrix *vec4<f32>(model.position, 1.0)).xyz.x <= light.position.z /3.0 + 4.0){
-        out.color = vec4<f32>(0.5,1.0,0.25,1.0);
-    }else{
-        out.color = vec4<f32>(diffuse_color[0],diffuse_color[1],diffuse_color[2],model.color[3]);
-    }
+    out.color = vec4<f32>((instance.normal[0] + 1.0) / 2.0,(instance.normal[1] + 1.0) / 2.0,(instance.normal[2] + 1.0) / 2.0,1.0);
     return out;
 }
 

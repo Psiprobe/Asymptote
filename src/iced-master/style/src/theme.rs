@@ -311,7 +311,7 @@ impl slider::StyleSheet for Theme {
         let handle = slider::Handle {
             shape: slider::HandleShape::Rectangle {
                 width: 8,
-                border_radius: 4.0,
+                border_radius: 0.0,
             },
             color: Color::WHITE,
             border_color: Color::WHITE,

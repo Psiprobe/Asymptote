@@ -47,7 +47,7 @@ impl Palette {
         ),
         primary: Color::from_rgb(
             0xFF as f32 / 255.0,
-            0x7F as f32 / 255.0,
+            0xFF as f32 / 255.0,
             0xFF as f32 / 255.0,
         ),
         success: Color::from_rgb(

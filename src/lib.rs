@@ -2,6 +2,8 @@ mod camera;
 mod shell;
 mod command;
 mod chunk;
+mod model_list;
+mod brush_list;
 
 use cgmath::*;
 
@@ -96,18 +98,6 @@ struct Vertex_tex {
 
 const OFFSET_X: f32 = 0.0;
 const OFFSET_Y: f32 = 0.0;
-const SAMPLE_RATIO: f32 = 2.0;
-
-const VERTICES_TEX: &[Vertex_tex] = &[
-
-    Vertex_tex { position: [SAMPLE_RATIO  + OFFSET_X ,  SAMPLE_RATIO + OFFSET_Y, 0.0], tex_coords: [1.0 ,0.0] },
-    Vertex_tex { position: [SAMPLE_RATIO  + OFFSET_X , -SAMPLE_RATIO + OFFSET_Y, 0.0], tex_coords: [1.0 ,1.0] },
-    Vertex_tex { position: [-SAMPLE_RATIO  +OFFSET_X ,-SAMPLE_RATIO  + OFFSET_Y, 0.0], tex_coords: [0.0 ,1.0] },
-    Vertex_tex { position: [-SAMPLE_RATIO  +OFFSET_X , -SAMPLE_RATIO + OFFSET_Y, 0.0], tex_coords:[0.0 ,1.0] },
-    Vertex_tex { position: [-SAMPLE_RATIO  +OFFSET_X , SAMPLE_RATIO  + OFFSET_Y, 0.0], tex_coords: [0.0 ,0.0] },
-    Vertex_tex { position: [SAMPLE_RATIO  + OFFSET_X , SAMPLE_RATIO  + OFFSET_Y, 0.0], tex_coords:  [1.0 ,0.0] },
-
-];
 
 impl Vertex_tex {
     fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
@@ -130,11 +120,11 @@ impl Vertex_tex {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct Instance {
-    is_active: bool,
     position: cgmath::Vector3<f32>,
     color: cgmath::Vector4<f32>,
+    normal: cgmath::Vector3<f32>,
     depth_strength:f32,
     normal_strength:f32,
 }
@@ -146,6 +136,7 @@ impl Instance {
         InstanceRaw {
             model: (cgmath::Matrix4::from_translation(self.position)).into(),
             color: [self.color.x,self.color.y,self.color.z,self.color.w],
+            normal: [self.normal.x,self.normal.y,self.normal.z],
             depth_strength: self.depth_strength,
             normal_strength: self.normal_strength,
         }
@@ -158,6 +149,7 @@ impl Instance {
 pub struct InstanceRaw {
     model: [[f32; 4]; 4],
     color: [f32; 4],
+    normal: [f32; 3],
     depth_strength: f32,
     normal_strength:f32,
 }
@@ -197,11 +189,16 @@ impl InstanceRaw {
                 wgpu::VertexAttribute {
                     offset: mem::size_of::<[f32; 20]>() as wgpu::BufferAddress,
                     shader_location: 10,
+                    format: wgpu::VertexFormat::Float32x3,
+                },
+                wgpu::VertexAttribute {
+                    offset: mem::size_of::<[f32; 23]>() as wgpu::BufferAddress,
+                    shader_location: 11,
                     format: wgpu::VertexFormat::Float32,
                 },
                 wgpu::VertexAttribute {
-                    offset: mem::size_of::<[f32; 21]>() as wgpu::BufferAddress,
-                    shader_location: 11,
+                    offset: mem::size_of::<[f32; 24]>() as wgpu::BufferAddress,
+                    shader_location: 12,
                     format: wgpu::VertexFormat::Float32,
                 },
             ],
@@ -276,6 +273,9 @@ pub struct State {
     cli_flag: bool,
 
     chunk_manager:chunk::ChunkManager,
+
+    vertex_texture: [Vertex_tex;6],
+    sample_ratio: f32,
 
     
 }
@@ -488,7 +488,7 @@ impl State {
 
         
         let light_uniform = LightUniform {
-            position: [150.0, 150.0, 0.0],
+            position: [150.0, 1000.0, 0.0],
             _padding: 0,
             flag: [0.0,1.0,1.0],
             _padding0: 0,
@@ -834,7 +834,18 @@ impl State {
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/blend_shader.wgsl").into()),
         });
 
+        let mut sample_ratio = 2.0;
 
+        let mut vertex_texture: [Vertex_tex;6] = [
+
+            Vertex_tex { position: [sample_ratio  + OFFSET_X ,  sample_ratio + OFFSET_Y, 0.0], tex_coords: [1.0 ,0.0] },
+            Vertex_tex { position: [sample_ratio  + OFFSET_X , -sample_ratio + OFFSET_Y, 0.0], tex_coords: [1.0 ,1.0] },
+            Vertex_tex { position: [-sample_ratio  +OFFSET_X ,-sample_ratio  + OFFSET_Y, 0.0], tex_coords: [0.0 ,1.0] },
+            Vertex_tex { position: [-sample_ratio  +OFFSET_X , -sample_ratio + OFFSET_Y, 0.0], tex_coords:[0.0 ,1.0] },
+            Vertex_tex { position: [-sample_ratio  +OFFSET_X , sample_ratio  + OFFSET_Y, 0.0], tex_coords: [0.0 ,0.0] },
+            Vertex_tex { position: [sample_ratio  + OFFSET_X , sample_ratio  + OFFSET_Y, 0.0], tex_coords:  [1.0 ,0.0] },
+    
+        ];
 
 
 
@@ -846,7 +857,7 @@ impl State {
 
         let vertex_tex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Texture Buffer"),
-            contents: bytemuck::cast_slice(VERTICES_TEX),
+            contents: bytemuck::cast_slice(&vertex_texture),
             usage: wgpu::BufferUsages::VERTEX,
         });
 
@@ -910,7 +921,7 @@ impl State {
                 entry_point: "fs_main",
                 targets: &[Some(wgpu::ColorTargetState {
                     format: config.format,
-                    blend: Some(wgpu::BlendState::PREMULTIPLIED_ALPHA_BLENDING),
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
             }),
@@ -1069,11 +1080,6 @@ impl State {
             multiview: None,
         });
 
-
-
-
-
-
         let render_blend_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
 
             label: Some("Render Blend Texture Pipeline"),
@@ -1092,7 +1098,7 @@ impl State {
                     format: config.format,
                     blend: Some(wgpu::BlendState {
                         color: wgpu::BlendComponent::REPLACE,
-                        alpha: wgpu::BlendComponent::OVER,
+                        alpha: wgpu::BlendComponent::REPLACE,
                     }),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
@@ -1173,8 +1179,6 @@ impl State {
 
         let num_vertices = VERTICES.len() as u32;
 
-        //let view_sensitivity = 0.3;
-
         Self {
 
             iced_state,
@@ -1244,11 +1248,14 @@ impl State {
 
             chunk_manager,
 
+            vertex_texture,
+            sample_ratio,
+
         }
 
     }
 
-    pub fn cursormoved(&mut self,new_pos:winit::dpi::PhysicalPosition<f64>){
+    pub fn cursormoved(&mut self, new_pos:winit::dpi::PhysicalPosition<f64>){
         self.cursor_position = new_pos;
     }
 
@@ -1319,13 +1326,28 @@ impl State {
         self.light_uniform.position[1] = 150.0 + 50.0*Rad::sin(Rad(self.light_uniform.position[0] /100.0 as f32));
         self.queue.write_buffer(&self.light_buffer, 0, bytemuck::cast_slice(&[self.light_uniform]));
 
-        self.chunk_manager.update(&self.device,&self.queue,dt,&self.camera,&self.camera_controller,self.cursor_position.x,self.cursor_position.y,self.texture_size,);
+        self.chunk_manager.update(&self.device,dt,&self.camera,&mut self.camera_controller,self.cursor_position.x,self.cursor_position.y,self.texture_size,&mut self.iced_state,&mut self.sample_ratio);
 
 
         
         //self.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&self.instance_data));
  
-        
+
+        self.vertex_texture = [
+
+            Vertex_tex { position: [self.sample_ratio  + OFFSET_X ,  self.sample_ratio + OFFSET_Y, 0.0], tex_coords: [1.0 ,0.0] },
+            Vertex_tex { position: [self.sample_ratio  + OFFSET_X , -self.sample_ratio + OFFSET_Y, 0.0], tex_coords: [1.0 ,1.0] },
+            Vertex_tex { position: [-self.sample_ratio  +OFFSET_X ,-self.sample_ratio  + OFFSET_Y, 0.0], tex_coords: [0.0 ,1.0] },
+            Vertex_tex { position: [-self.sample_ratio  +OFFSET_X , -self.sample_ratio + OFFSET_Y, 0.0], tex_coords:[0.0 ,1.0] },
+            Vertex_tex { position: [-self.sample_ratio  +OFFSET_X , self.sample_ratio  + OFFSET_Y, 0.0], tex_coords: [0.0 ,0.0] },
+            Vertex_tex { position: [self.sample_ratio  + OFFSET_X , self.sample_ratio  + OFFSET_Y, 0.0], tex_coords:  [1.0 ,0.0] },
+
+        ];
+        self.vertex_tex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Vertex Texture Buffer"),
+            contents: bytemuck::cast_slice(&self.vertex_texture),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
 
         
         
@@ -1647,6 +1669,7 @@ impl State {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {
+    
     cfg_if::cfg_if! {
         if #[cfg(target_arch = "wasm32")] {
             console_log::init_with_level(log::Level::Warn).expect("Could't initialize logger");
@@ -1759,6 +1782,7 @@ pub async fn run() {
             {
                 state.camera_controller.process_mouse_motion(delta.0, delta.1)
             }
+            
 
             winit::event::Event::WindowEvent {
                 ref event,
@@ -1788,6 +1812,10 @@ pub async fn run() {
                             ..
                         } => {
                             state.cursormoved(*position);
+                        }
+
+                        WindowEvent::MouseWheel { delta, .. } => {
+                            state.camera_controller.process_scroll(delta);
                         }
 
                         WindowEvent::Resized(physical_size) => {
@@ -1836,7 +1864,9 @@ pub async fn run() {
                 if state.iced_state.program().parse_flag {
 
                     let t = &state.iced_state.program().text;
+                    
                     command_parser.text = t.to_string();
+
                     command_parser.parse_command(&mut state);
 
                     state.iced_state.queue_message(CommandParsed);
@@ -1858,6 +1888,8 @@ pub async fn run() {
                     Err(e) => eprintln!("{:?}", e),
                 }
 
+                state.chunk_manager.chunk_list.retain(|c|c.current_type != ChunkType::UsrIndicator);
+
                 window.set_cursor_icon(
                     iced_winit::conversion::mouse_interaction(
                         state.iced_state.mouse_interaction(),//state.iced_state note
@@ -1877,9 +1909,7 @@ pub async fn run() {
         }else{
             if a == 33 {
                 state.cli_status = true;
-                state.iced_state.queue_message(ServerLog("Welcome to ASYMPTOTE Industries (TM) !".to_string()));
-                state.iced_state.queue_message(ServerLog("Current Version: 1.0.0".to_string()));
-                //iced enabled && welcome message
+                //iced enabled
             }
             if a>777 {
                 

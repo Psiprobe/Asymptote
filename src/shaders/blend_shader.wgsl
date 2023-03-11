@@ -184,13 +184,13 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     }
     else if(normal.x != normal_left.x || normal.y != normal_left.y ||normal.z != normal_left.z){
 
-        return diffuse;
+        return diffuse * 3.0;
 
     }
     
     else if(normal.x != normal_down.x|| normal.y != normal_down.y||normal.z != normal_down.z){
 
-        return diffuse;
+        return diffuse * 3.0;
 
     }
     
