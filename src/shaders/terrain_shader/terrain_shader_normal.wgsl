@@ -1,5 +1,7 @@
 struct CameraUniform {
     view_proj: mat4x4<f32>,
+    position:vec3<f32>,
+    eye:vec3<f32>
 };
 @group(0)@binding(0)
 var<uniform> camera: CameraUniform;
@@ -37,7 +39,7 @@ fn vs_main(
     model: VertexInput,
     instance: InstanceInput,
 ) -> VertexOutput {
-
+    
     let model_matrix = mat4x4<f32>(
         instance.model_matrix_0,
         instance.model_matrix_1,
@@ -47,6 +49,19 @@ fn vs_main(
 
     var out: VertexOutput;
 
+    let view = camera.eye - camera.position;
+    let voxel_position = model_matrix *vec4<f32>(model.position, 1.0);
+
+    let plane_a = view.x;
+    let plane_b = view.y;
+    let plane_c = view.z;
+    let plane_d = - ( camera.eye.x * view.x + camera.eye.y * view.y + camera.eye.z * view.z );
+
+    let distance_to_plane = abs(plane_a * voxel_position.x + plane_b * voxel_position.y + plane_c * voxel_position.z + plane_d)/ sqrt(plane_a * plane_a + plane_b * plane_b + plane_c * plane_c);
+
+    let near = 1300.0;
+    let far = 3750.0;
+
     out.clip_position =  camera.view_proj * model_matrix *vec4<f32>(model.position, 1.0);
 
     let light_dir = normalize(light.position - (model_matrix *vec4<f32>(model.position, 1.0)).xyz);
@@ -55,6 +70,7 @@ fn vs_main(
     let diffuse_color = rgb_color *  diffuse_strength *  diffuse_strength;
 
     out.color = vec4<f32>((instance.normal[0] + 1.0) / 2.0,(instance.normal[1] + 1.0) / 2.0,(instance.normal[2] + 1.0) / 2.0,1.0);
+
     return out;
 }
 

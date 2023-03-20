@@ -1,17 +1,35 @@
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashMap};
 use std::time::Duration;
-use cgmath::num_traits::abs;
 use iced_wgpu::wgpu;
 use iced_wgpu::wgpu::util::DeviceExt;
-use iced_winit::program;
-use crate::{Instance,InstanceRaw, shell};
+use iced_winit::{program, winit};
+
+use winit::{
+    dpi::PhysicalSize,
+    dpi::PhysicalPosition,
+    event::*,
+    event_loop::{ControlFlow, EventLoop},
+    window::{Window, WindowBuilder,Fullscreen},
+};
+
+use crate::{Instance,InstanceRaw, shell, VoxelType};
 use crate::camera::*;
 use crate::shell::Message::*;
 use crate::brush_list;
 use crate::model_list;
 
-const RADIUS_CHUNK:i32 = 32;
+const RADIUS_CHUNK:i32 = 16;
 const RADIUS_VOXEL:i32 = 128;
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct Light {
+    pub position: [f32; 3],
+    // uniforms requiring 16 byte (4 float) spacing, we need to use a padding field here
+    _padding: u32,
+    pub color: [f32; 4],
+}
+
 
 #[derive(Clone, Copy)]
 pub struct BrushState {
@@ -30,6 +48,7 @@ impl BrushState {
             }
 
             1 => {
+                self.radius = 1;
             }
 
             _=>{}
@@ -42,6 +61,7 @@ impl BrushState {
 }
 pub struct ModelState {
     pub id: i32,
+    pub scale: i32,
     pub max_id: i32,
     pub height: i32,
     pub radius: i32,
@@ -56,19 +76,19 @@ impl ModelState {
             0 => {
                 self.name = "CHESS".to_string();
                 self.height = 1;
-                self.radius = RADIUS_VOXEL;
+                self.radius = RADIUS_VOXEL / self.scale;
             }
 
             1 => {
                 self.name = "PLANE".to_string();
                 self.height = 1;
-                self.radius = RADIUS_VOXEL;
+                self.radius = RADIUS_VOXEL / self.scale;
             }
 
             2 => {
                 self.name = "BLOCK".to_string();
-                self.height = RADIUS_VOXEL;
-                self.radius = RADIUS_VOXEL/2;
+                self.height = RADIUS_VOXEL / self.scale;
+                self.radius = RADIUS_VOXEL / self.scale;
             }
 
             _=>{}
@@ -76,7 +96,7 @@ impl ModelState {
     }
 
     pub fn new() -> Self{
-        Self { id: 0, max_id:2,height: 1,radius:RADIUS_VOXEL/2, name:"CHESS".to_owned(), color: [0.7,0.7,0.7,1.0]}
+        Self { id: 0, scale:1,max_id:2,height: 1,radius:Default::default(), name:"CHESS".to_owned(), color: [0.7,0.7,0.7,1.0]}
     }
 }
 
@@ -108,6 +128,9 @@ impl IndicatorState {
 pub struct ChunkManager{
 
     pub chunk_list:Vec<Chunk>,
+
+    pub point_light_list:Vec<Light>,
+
     pub debug_mode:bool,
     pub w:f32,
 
@@ -120,11 +143,14 @@ pub struct ChunkManager{
 
     pub pervious_indicator_first:[i32;3],
     pub pervious_indicator_last:[i32;3],
+
+    pub next_overdose:bool,
+    pub prior_overdose:bool,
+
     pub pervious_mouse_left:bool,
 
     pub duplicate:bool,
     
-
 }
 #[derive(Copy, Clone, PartialEq)]
 pub enum ChunkType {
@@ -140,26 +166,21 @@ impl ChunkManager{
     pub fn new(device:&wgpu::Device) -> Self{
 
         let mut chunk_list:Vec<Chunk> = Default::default();
+        let mut light_vector:Vec<Light> = Default::default();
+
+        for x in 0..512{
+            light_vector.push(
+                Light {
+                    position: [0.0, 0.0, 0.0],
+                    _padding: 0,
+                    color: [0.0,0.0,0.0,0.0],
+                }
+            );
+        }
+
         let debug_mode = true;
 
-        let w = 1.0;
-
-        for x in 0..RADIUS_CHUNK{
-            for y in 0..1{
-                for z in 0..RADIUS_CHUNK{
-
-                    let chunk_pos_x = x - RADIUS_CHUNK/2;
-                    let chunk_pos_z = z - RADIUS_CHUNK/2;
-
-                    if((chunk_pos_x * chunk_pos_x + chunk_pos_z * chunk_pos_z )as f32).sqrt()> (RADIUS_CHUNK/2) as f32{
-                        continue
-                    }
-                    
-                    chunk_list.push(Chunk::indicator_cross(chunk_pos_x, y, chunk_pos_z, true,device));
-
-                }
-            }
-        }
+        let w = 0.0;   
 
         Self{
 
@@ -171,14 +192,19 @@ impl ChunkManager{
             tab_overdose:Default::default(),
 
             indicator_state: IndicatorState::Normal,
+
             model_state: ModelState::new(),
             brush_state: BrushState::new(),
 
             pervious_indicator_first:Default::default(),
-            pervious_indicator_last:Default::default(),
+            pervious_indicator_last:Default::default(), 
+
+            next_overdose:Default::default(),
+            prior_overdose:Default::default(),
 
             duplicate: false,
             pervious_mouse_left: false,
+            point_light_list: light_vector,
 
         }
     }
@@ -186,6 +212,17 @@ impl ChunkManager{
 
     pub fn update(&mut self,device:&wgpu::Device,dt:Duration,camera:&Camera,camera_controller:&mut CameraController,mouse_pos_x:f64,mouse_pos_y:f64,texture_size: wgpu::Extent3d, iced_state: &mut program::State<shell::Controls>, sample_ratio:&mut f32){
         
+        if self.w < -0.5{
+            self.w =  1.0;
+        }
+        else{
+            self.w = self.w - (dt.as_secs_f32()*4.0);
+        }
+
+        if camera_controller.is_tab_pressed && !self.tab_overdose{
+            self.indicator_state = self.indicator_state.turn();
+        }
+
         let mut delete = false;
         let shell_color_config = iced_state.program().color;
         let mut color = [shell_color_config.r,shell_color_config.g,shell_color_config.b,self.w];
@@ -215,13 +252,12 @@ impl ChunkManager{
         else{
 
             match &self.indicator_state{
-                IndicatorState::Normal => {},
 
-                IndicatorState::Brush => {
+                IndicatorState::Normal => {
                     if camera_controller.scroll > 0.0{
                         self.brush_state.radius += 1;
                         if self.brush_state.radius > 64{
-                        self.brush_state.radius = 64;
+                            self.brush_state.radius = 64;
                         }
                     }
                     else if camera_controller.scroll < 0.0{
@@ -242,18 +278,84 @@ impl ChunkManager{
                         iced_state.queue_message(UsrIndicator(self.indicator_state.to_str() + "_DELETE" , self.tab_overdose));
                     }
                 },
-                IndicatorState::Place => {
+
+                IndicatorState::Brush => {
                     if camera_controller.scroll > 0.0{
+                        self.brush_state.radius += 1;
+                        if self.brush_state.radius > 64{
+                            self.brush_state.radius = 64;
+                        }
+                        self.brush_state.update();
+                    }
+                    else if camera_controller.scroll < 0.0{
+                        self.brush_state.radius -= 1;
+                        if self.brush_state.radius < 1{
+                            self.brush_state.radius = 1;
+                        }
+                        self.brush_state.update();
+                    }
+
+                    if camera_controller.is_next_pressed && !self.next_overdose{
+
+                        self.brush_state.id += 1;
+                        if self.brush_state.id > self.brush_state.max_id{
+                            self.brush_state.id = 0;
+                        }
+            
+                    }
+            
+                    if camera_controller.is_prior_pressed && !self.prior_overdose{
+            
+                        self.brush_state.id -= 1;
+                        if self.brush_state.id < 0{
+                            self.brush_state.id = self.brush_state.max_id;
+                        }
+            
+                    }
+
+                    if !delete{
+                        iced_state.queue_message(UsrIndicator(
+                            self.indicator_state.to_str() + 
+                            &self.brush_state.id.to_string() + 
+                            &" pix:".to_string() +
+                            &self.brush_state.radius.to_string()
+                            , self.tab_overdose));
+                        
+                    }else{
+                        iced_state.queue_message(UsrIndicator(self.indicator_state.to_str() + "_DELETE" , self.tab_overdose));
+                    }
+                },
+                IndicatorState::Place => {
+
+                    if camera_controller.scroll > 0.0{
+                        self.model_state.scale *= 2;
+                        if self.model_state.scale > 8{
+                            self.model_state.scale = 8;
+                        }
+                    }
+                    else if camera_controller.scroll < 0.0{
+                        self.model_state.scale /= 2;
+                        if self.model_state.scale < 1{
+                            self.model_state.scale = 1;
+                        }
+                    }
+
+                    if camera_controller.is_next_pressed && !self.next_overdose{
+
                         self.model_state.id += 1;
                         if self.model_state.id > self.model_state.max_id{
                             self.model_state.id = 0;
                         }
+            
                     }
-                    else if camera_controller.scroll < 0.0{
+            
+                    if camera_controller.is_prior_pressed && !self.prior_overdose{
+            
                         self.model_state.id -= 1;
                         if self.model_state.id < 0{
-                            self.model_state.id = 2;
+                            self.model_state.id = self.model_state.max_id;
                         }
+            
                     }
     
                     if !delete{
@@ -266,22 +368,13 @@ impl ChunkManager{
                 },
             }
         }
-        
-        
         camera_controller.scroll = 0.0;
+
         self.model_state.update();
         self.brush_state.update();
 
         let mouse_x = mouse_pos_x / *sample_ratio as f64 - texture_size.width as f64 / 2.0 / *sample_ratio as f64;
         let mouse_y = mouse_pos_y / *sample_ratio as f64 * 3.0 - texture_size.height as f64 / 2.0 / *sample_ratio as f64 * 3.0;
-        
-
-        if self.w < -0.5{
-            self.w =  1.0;
-        }
-        else{
-            self.w = self.w - (dt.as_secs_f32()*4.0);
-        }
 
         let camera_mouse_eye = camera.eye + (camera.forward * mouse_y as f32)  + (camera.left * mouse_x as f32);
         let camera_mouse_target = camera.target + (camera.forward * mouse_y as f32) + (camera.left * mouse_x as f32);
@@ -293,13 +386,14 @@ impl ChunkManager{
 
         let mut voxel_founded = false;
 
-        while camera_target_y >= (RADIUS_VOXEL/2 - 1) as f32&& !voxel_founded{
+        let snap_radius = RADIUS_VOXEL/self.model_state.scale;
+
+        while camera_target_y >= (RADIUS_VOXEL/2 - 1 - (RADIUS_VOXEL * 8)) as f32&& !voxel_founded{
 
             camera_target_x = (camera_target_y - camera_mouse_eye.y) / (camera_mouse_eye.y - camera_mouse_target.y) * (camera_mouse_eye.x - camera_mouse_target.x) + camera_mouse_eye.x;
             camera_target_z = (camera_target_y - camera_mouse_eye.y) / (camera_mouse_eye.y - camera_mouse_target.y) * (camera_mouse_eye.z - camera_mouse_target.z) + camera_mouse_eye.z;
             
-            camera_target_y = camera_target_y - 0.5 as f32;
-            
+            camera_target_y = camera_target_y - 0.3 as f32;
 
             self.chunk_list.iter_mut().filter(|c|c.current_type != ChunkType::UsrIndicator).for_each(|c|{
 
@@ -316,7 +410,7 @@ impl ChunkManager{
 
                     if camera_target_x >= v_range_x_min as f32 && camera_target_x <= v_range_x_max as f32 &&  
                         camera_target_y >= v_range_y_min as f32 && camera_target_y <= v_range_y_max as f32 &&  
-                         camera_target_z >= v_range_z_min as f32 && camera_target_z <= v_range_z_max as f32
+                        camera_target_z >= v_range_z_min as f32 && camera_target_z <= v_range_z_max as f32
                     {
 
                         c.is_selected = true;
@@ -324,10 +418,7 @@ impl ChunkManager{
                         camera_target_z = (camera_target_y - camera_mouse_eye.y) / (camera_mouse_eye.y - camera_mouse_target.y) * (camera_mouse_eye.z - camera_mouse_target.z) + camera_mouse_eye.z;
                         camera_target_x = (camera_target_y - camera_mouse_eye.y) / (camera_mouse_eye.y - camera_mouse_target.y) * (camera_mouse_eye.x - camera_mouse_target.x) + camera_mouse_eye.x;
 
-                        if camera_controller.is_down_pressed{
-                            camera_target_x = (c.position[0] * RADIUS_VOXEL) as f32;
-                            camera_target_z = (c.position[2] * RADIUS_VOXEL) as f32;
-                        }
+                        let mut voxel_normal:[f32;3] = Default::default();
 
                         match c.position_hash.get(&[
                             camera_target_x as i32,
@@ -335,21 +426,56 @@ impl ChunkManager{
                             camera_target_z as i32,
                         ])
                         {
-                            Some(_usize) => voxel_founded = true,
+                            Some(usize) => {
+                                voxel_founded = true;
+                                voxel_normal = c.voxel_data[*usize].normal.into();
+                            },
                             None => {},
                         }
 
                         if voxel_founded && c.current_type == ChunkType::Default{
 
                             if self.indicator_state == IndicatorState::Place && !camera_controller.is_control_pressed{
-                                camera_target_y = camera_target_y + 1 as f32;
+                                camera_target_x = camera_target_x + voxel_normal[0];
+                                camera_target_y = camera_target_y + voxel_normal[1];
+                                camera_target_z = camera_target_z + voxel_normal[2];
                             }
 
+
+                            if camera_controller.is_alt_pressed{
+                                let chunk_pos_x = ((camera_target_x as i32 + snap_radius/2) as f32/ snap_radius as f32).floor() as i32;
+                                let chunk_pos_y = ((camera_target_y as i32 + snap_radius/2) as f32/ snap_radius as f32).floor() as i32;
+                                let chunk_pos_z = ((camera_target_z as i32 + snap_radius/2) as f32/ snap_radius as f32).floor() as i32;
+                
+                                camera_target_x = (chunk_pos_x * snap_radius) as f32;
+                                camera_target_y = (chunk_pos_y * snap_radius) as f32;
+                                camera_target_z = (chunk_pos_z * snap_radius) as f32;
+                                
+                            }
                         }
                     }
                 }
             });
         }
+
+        if !voxel_founded{
+
+            camera_target_y = camera.target.y - RADIUS_VOXEL as f32;
+        
+            camera_target_x = (camera_target_y - camera_mouse_eye.y) / (camera_mouse_eye.y - camera_mouse_target.y) * (camera_mouse_eye.x - camera_mouse_target.x) + camera_mouse_eye.x;
+            camera_target_z = (camera_target_y - camera_mouse_eye.y) / (camera_mouse_eye.y - camera_mouse_target.y) * (camera_mouse_eye.z - camera_mouse_target.z) + camera_mouse_eye.z;
+
+            if camera_controller.is_alt_pressed{
+
+                let chunk_pos_x = ((camera_target_x as i32 + snap_radius/2) as f32/ snap_radius as f32).floor() as i32;
+                let chunk_pos_z = ((camera_target_z as i32 + snap_radius/2) as f32/ snap_radius as f32).floor() as i32;
+
+                camera_target_x = (chunk_pos_x * snap_radius) as f32;
+                camera_target_z = (chunk_pos_z * snap_radius) as f32;
+
+            }
+        }
+           
 
         //iced_state.queue_message(Coordinate([camera_target_x,camera_target_y,camera_target_z]));
 
@@ -359,11 +485,10 @@ impl ChunkManager{
 
         let head:&str ;
 
-        if camera_controller.is_tab_pressed && !self.tab_overdose{
-            self.indicator_state = self.indicator_state.turn();
-        }
+        let id:i32;
 
         match &self.indicator_state{
+
             IndicatorState::Normal => {
                 indicator_first = [
                     camera_target_x as i32 - self.model_state.radius/2, 
@@ -376,6 +501,8 @@ impl ChunkManager{
                     camera_target_y as i32 + (self.model_state.height - 1) ,
                     camera_target_z as i32 + self.model_state.radius/2 - 1, 
                 ];
+
+                id = 0;
             },
             IndicatorState::Brush => {
 
@@ -390,7 +517,11 @@ impl ChunkManager{
                     camera_target_y as i32 + self.brush_state.radius/2, 
                     camera_target_z as i32 + self.brush_state.radius/2, 
                 ];
+
                 if delete{color = [1.0,1.0,1.0,1.0]}
+
+                let indicator_brush_model_id = 1;
+
                 self.place(
                     [indicator_first[0],indicator_first[1],indicator_first[2]],
                     [indicator_last[0],indicator_last[1],indicator_last[2]],
@@ -398,10 +529,14 @@ impl ChunkManager{
                     false,
                     device,
                     ChunkType::UsrIndicator,
+                    indicator_brush_model_id,
                     iced_state
                 );
+
+                id = self.brush_state.id;
             },
             IndicatorState::Place => {
+                
                 if delete{
                     indicator_first = [
                     camera_target_x as i32 - RADIUS_VOXEL/2, 
@@ -428,6 +563,9 @@ impl ChunkManager{
                     ];
                 }
 
+                
+                id = self.model_state.id;
+                
                 self.place(
                     [indicator_first[0],indicator_first[1]+1,indicator_first[2]],
                     [indicator_last[0],indicator_last[1]+1,indicator_last[2]],
@@ -435,12 +573,15 @@ impl ChunkManager{
                     false,
                     device,
                     ChunkType::UsrIndicator,
+                    id,
                     iced_state
                 );
 
                 if delete{
                     indicator_last[1] = RADIUS_VOXEL * 8;
                 }
+                
+                
             },
         }
 
@@ -453,10 +594,10 @@ impl ChunkManager{
 
                 IndicatorState::Normal => {
                     if !delete{
-                        head = "/get";
+                        head = "";
                         
                     }else{
-                        head = "/get";
+                        head = "";
                     }
                 },
                 IndicatorState::Brush => {
@@ -479,6 +620,7 @@ impl ChunkManager{
             }
             
             if head != ""{
+
                 let t = 
                 head.to_owned() + &' '.to_string()
                 + &indicator_first[0].to_string()+ &' '.to_string()
@@ -492,14 +634,55 @@ impl ChunkManager{
                 + &color[0].to_string()+ &' '.to_string()
                 + &color[1].to_string()+ &' '.to_string()
                 + &color[2].to_string()+ &' '.to_string()
-                + &color[3].to_string()+ &' '.to_string();
-    
-                iced_state.queue_message(TextChanged(t.to_owned()));
-                iced_state.queue_message(OnSubmit);
-            }
-            
+                + &color[3].to_string()+ &' '.to_string()
 
+                + &id.to_string()+ &' '.to_string();
+
+                if head == "/draw"{
+                    iced_state.queue_message(shell::Message::CommandChanged(t.to_owned()));
+                    iced_state.queue_message(shell::Message::Parse);
+                }
+            
+                #[cfg(target_arch = "wasm32")]
+                {
+                
+                    use wasm_bindgen::prelude::*;
+                
+                    #[wasm_bindgen(module = "/tab.js")]
+
+                    extern "C" {
+
+                        fn issue_command();
+                        fn set_command_send_buffer(command:String);
+
+                    }
+
+                    set_command_send_buffer(t);
+                    issue_command();
+                }
+
+                
+    
+                
+            }
         }
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
 
         if camera_controller.mouse_left_pressed {
             self.chunk_overdose = true;
@@ -518,14 +701,19 @@ impl ChunkManager{
         }else{
             self.duplicate = false;
         }
+
+        self.prior_overdose = camera_controller.is_prior_pressed;
+        self.next_overdose = camera_controller.is_next_pressed;
+
         self.pervious_indicator_first = indicator_first;
         self.pervious_indicator_last = indicator_last;
+
         self.pervious_mouse_left = camera_controller.mouse_left_pressed;
 
         
     }
 
-    pub fn draw(&mut self,first:[i32;3],last:[i32;3],color:[f32;4],device:&wgpu::Device){
+    pub fn draw(&mut self,first:[i32;3],last:[i32;3],color:[f32;4],id:i32,device:&wgpu::Device){
 
         let chunk_pos_x_first = ((first[0] + RADIUS_VOXEL/2) as f32/ RADIUS_VOXEL as f32).floor() as i32;
         let chunk_pos_x_last= ((last[0] + RADIUS_VOXEL/2) as f32/ RADIUS_VOXEL as f32).floor() as i32;
@@ -560,22 +748,16 @@ impl ChunkManager{
                             if z_last  > last[2]    {z_last = last[2]}
 
                             let c_first = [x_first,y_first,z_first];
-                            let c_last = [x_last,y_last,z_last];
+                            let c_last = [x_last,y_last,z_last ];
 
-                            c.draw(c_first, c_last, color, device, self.brush_state)
+                            c.draw(c_first, c_last, color, device, id , &mut self.point_light_list)
                         }
                     })
                 }
             }
         }
     }
-    pub fn place(&mut self,first:[i32;3],last:[i32;3],color:[f32;4],delete:bool,device:&wgpu::Device,chunk_type: ChunkType,iced_state: &mut program::State<shell::Controls>){
-
-        let mut temp_model_value = 0;
-        if self.indicator_state == IndicatorState::Brush{
-            temp_model_value = self.model_state.id;
-            self.model_state.id = 2;
-        }
+    pub fn place(&mut self,first:[i32;3],last:[i32;3],color:[f32;4],delete:bool,device:&wgpu::Device,chunk_type: ChunkType,id:i32,iced_state: &mut program::State<shell::Controls>){
 
         //chunk offset
         let c_first = first;
@@ -618,22 +800,18 @@ impl ChunkManager{
 
                     self.chunk_list.iter_mut().filter(|c| c.current_type == chunk_type).for_each(|c|{
                         if c.position[0] == xx && c.position[1] == yy && c.position[2] == zz{
-                            c.place(c_first, c_last, color, delete , device, &mut self.model_state);
+                            c.place(c_first, c_last, color, delete , device, id);
                             chunk_modified_flag = true;
                         }
                     });
                     
                     if !chunk_modified_flag{
                         let mut chunk = Chunk::empty(xx, yy, zz, true, device, chunk_type);
-                        chunk.place(c_first, c_last, color, delete, device, &mut self.model_state);
+                        chunk.place(c_first, c_last, color, delete, device, id);
                         self.chunk_list.push(chunk);
                     }
                 }
             }
-        }
-        
-        if self.indicator_state == IndicatorState::Brush{
-            self.model_state.id = temp_model_value;
         }
     }
 }
@@ -654,60 +832,6 @@ pub struct Chunk{
 
 impl Chunk{
 
-    pub fn indicator_cross(x:i32,y:i32,z:i32,is_active:bool,device:&wgpu::Device)->Self{
-
-        let chunk_position = [x,y,z];
-        let mut voxel_data:Vec<Instance> = Default::default();
-        let instance_data:Vec<InstanceRaw>;
-
-        
-
-        for x in 0 ..RADIUS_VOXEL{
-            for z in 0 ..RADIUS_VOXEL{
-
-                let position= cgmath::Vector3 { x:(x as i32 - RADIUS_VOXEL /2 + chunk_position[0] * RADIUS_VOXEL) as f32, y:(RADIUS_VOXEL/2 - 3) as f32, z:(z as i32 - RADIUS_VOXEL/2 + chunk_position[2] * RADIUS_VOXEL) as f32} ;
-                let color= cgmath::Vector4 {x:0.0,y:0.05,z:0.0,w:1.0};
-                let normal = cgmath::Vector3 { x:0.0, y:1.0, z:0.0};
-
-                if position.y == (RADIUS_VOXEL/2 - 3) as f32 && (
-
-                abs(position.x % RADIUS_VOXEL as f32) == (RADIUS_VOXEL /2 - 1) as f32|| 
-                abs(position.z  % RADIUS_VOXEL as f32) == (RADIUS_VOXEL /2 - 1) as f32)
-                {
-                    voxel_data.push(Instance {
-                        position,
-                        color,
-                        normal,
-                        depth_strength:0.0,
-                        normal_strength:1.0,
-                    });   
-                }             
-            }
-        }
-        
-        instance_data = voxel_data.iter().map(Instance::to_raw).collect::<Vec<_>>();
-        let buffer_data = device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-            label: Some("Instance Buffer"),
-            contents: bytemuck::cast_slice(&instance_data),
-            usage: wgpu::BufferUsages::VERTEX|wgpu::BufferUsages::COPY_DST,
-        });
-        let instance_len = instance_data.len() as u32;
-
-        Self{
-            position:chunk_position,
-            voxel_data,
-            instance_data,
-            instance_len,
-            buffer_data,
-            is_active,
-            is_selected:false,
-            need_update:false,
-            current_type:ChunkType::TerrainIndicator,
-            position_hash:Default::default(),
-        }
-
-    }
     pub fn empty(x:i32,y:i32,z:i32,is_active:bool,device:&wgpu::Device,chunk_type:ChunkType)->Self{
 
         let chunk_position = [x,y,z];
@@ -737,45 +861,32 @@ impl Chunk{
         }
     }
 
-    pub fn draw(&mut self,first:[i32;3],last:[i32;3],color:[f32;4],device:&wgpu::Device,brush_state: BrushState){
+    pub fn draw(&mut self,first:[i32;3],last:[i32;3],color:[f32;4],device:&wgpu::Device,id: i32, point_light_list:&mut Vec<Light>){
 
-        for x in first[0]..last[0] + 1{
-            for y in first[0]..last[0] + 1{
-                for z in first[0]..last[0] + 1{
-
-                    match self.position_hash.get(&[
-                        x as i32,
-                        y as i32,
-                        z as i32,
-                    ])
-                    {
-                        Some(usize) => {
-                            let color = brush_list::parse_draw(x,y,z,first,last,color,&brush_state);
-                            match color{
-                            Some(c) =>{
-                                self.voxel_data[*usize].color = cgmath::vec4(c[0], c[1], c[2], c[3]);
-                            }
-                            _ =>{}
-                        }
-                        }
-                        None => {},
-                    }
-                }
-            }
-        }
         self.voxel_data.iter_mut().for_each(|v|{
 
             if v.position[0] >= first[0] as f32&& v.position[0] <= last[0] as f32{
                 if v.position[1] >= first[1] as f32&& v.position[1] <= last[1] as f32{
                     if v.position[2] >= first[2] as f32&& v.position[2] <= last[2] as f32{
 
-                        let color = brush_list::parse_draw(v.position[0] as i32,v.position[1] as i32,v.position[2] as i32,first,last,color,&brush_state);
+                        let color = brush_list::parse_draw(v.position[0] as i32,v.position[1] as i32,v.position[2] as i32,first,last,color,id);
                         match color{
                             Some(c) =>{
                                 v.color = cgmath::vec4(c[0], c[1], c[2], c[3]);
+                                if id == 1{
+                                    v.current_type = VoxelType::Fire;
+                                    for i in 2..512{
+                                        if point_light_list[i].color[3] == 0.0{
+                                            point_light_list[i].color = v.color.into();
+                                            point_light_list[i].position = v.position.into();
+                                            break;
+                                        }
+                                    }
+                                }
                             }
                             _ =>{}
                         }
+
                     }
                 }
             }
@@ -794,9 +905,9 @@ impl Chunk{
     }
 
 
-    pub fn place(&mut self,first:[i32;3],last:[i32;3],color:[f32;4],delete:bool,device:&wgpu::Device,model_state:&mut ModelState){
+    pub fn place(&mut self,first:[i32;3],last:[i32;3],color:[f32;4],delete:bool,device:&wgpu::Device,id:i32){
 
-
+        let len = self.voxel_data.len();
         self.voxel_data
         .retain(|v|
 
@@ -805,12 +916,17 @@ impl Chunk{
             v.position[2] < first[2] as f32 || v.position[2] > last[2] as f32
 
         );
-        self.position_hash.retain(|h, _|{
-            (h[0] < first[0]|| h[0] > last[0]) ||
-            (h[1] < first[1]|| h[1] > last[1]) ||
-            (h[2] < first[2]|| h[2] > last[2])
-        });
-        
+        let retained_len = self.voxel_data.len();
+
+        if retained_len != len{
+
+            let mut hash_map:HashMap<[i32;3],usize> = Default::default();
+            self.voxel_data.iter().for_each(|v|{
+                hash_map.insert([v.position[0] as i32,v.position[1] as i32,v.position[2] as i32], self.voxel_data.len()-1);
+            });
+            self.position_hash = hash_map;
+            //hash rebuilt
+        }
 
         if !delete{
 
@@ -820,7 +936,8 @@ impl Chunk{
 
                         if x == first[0]||x == last[0]||y == first[1]||y == last[1]||z == first[2]||z == last[2]{
 
-                            let instance = model_list::parse_place(x, y, z, first, last, color, model_state);
+                            let instance = model_list::parse_place(x, y, z, first, last, color, id);
+
                             match instance{
                                 Some(ins) => {
                                     self.voxel_data.push(ins);

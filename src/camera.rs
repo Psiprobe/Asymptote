@@ -25,7 +25,8 @@ pub struct Camera {
 impl Camera {
     pub fn build_view_projection_matrix(&self) -> cgmath::Matrix4<f32> {
         let view = cgmath::Matrix4::look_at_rh(self.eye, self.target, self.up);
-        let proj = cgmath::ortho(-self.aspect*self.fovy, self.aspect*self.fovy,-1.0*self.fovy ,1.0*self.fovy ,self.znear, self.zfar);
+        let proj = cgmath::ortho(-self.aspect*self.fovy, self.aspect*self.fovy,-1.0*self.fovy ,1.0*self.fovy,self.znear,self.zfar);
+        //let proj = cgmath::perspective(cgmath::Deg(15.0), self.aspect, self.znear, self.zfar);
         return OPENGL_TO_WGPU_MATRIX * proj * view
     }
 }
@@ -61,17 +62,27 @@ impl Uniform {
 
 pub struct CameraUniform {
     view_proj: [[f32;4];4],
+    position:[f32;3],
+    _padding0: u32,
+    eye:[f32;3],
+    _padding1: u32,
 }
 
 impl CameraUniform {
     pub fn new() -> Self {
         Self {
             view_proj: cgmath::Matrix4::identity().into(),
+            position:Default::default(),
+            _padding0:0,
+            eye:Default::default(),
+            _padding1:0
         }
     }
 
     pub fn update_view_proj(&mut self,camera: &Camera) {
         self.view_proj = camera.build_view_projection_matrix().into();
+        self.position = [camera.position.x,camera.position.y,camera.position.z];
+        self.eye = [camera.eye.x,camera.eye.y,camera.eye.z];
     }
 }
 
@@ -92,6 +103,9 @@ pub struct CameraController {
     pub is_left_pressed: bool,
     pub is_right_pressed: bool,
     pub is_tab_pressed: bool,
+    pub is_alt_pressed: bool,
+    pub is_prior_pressed: bool,
+    pub is_next_pressed: bool,
 
     pub is_control_pressed: bool,
 
@@ -130,13 +144,19 @@ impl CameraController {
             speed,
             sensitivity,
 
-            is_cli_released:false,
-            is_cli_pressed:false,
+            
+            
             is_up_pressed: false,
             is_down_pressed: false,
             is_forward_pressed: false,
             is_backward_pressed: false,
             is_tab_pressed: false,
+            is_alt_pressed:false,
+            is_prior_pressed:false,
+            is_next_pressed:false,
+
+            is_cli_pressed:false,
+            is_cli_released:false,
 
             is_control_pressed:false,
 
@@ -221,20 +241,32 @@ impl CameraController {
                         self.is_tab_pressed = is_pressed;
                         true
                     }
-                    VirtualKeyCode::W | VirtualKeyCode::Up => {
+                    VirtualKeyCode::LAlt=> {
+                        self.is_alt_pressed = is_pressed;
+                        true
+                    }
+                    VirtualKeyCode::W => {
                         self.is_forward_pressed = is_pressed;
                         true
                     }
-                    VirtualKeyCode::A | VirtualKeyCode::Left => {
+                    VirtualKeyCode::A => {
                         self.is_left_pressed = is_pressed;
                         true
                     }
-                    VirtualKeyCode::S | VirtualKeyCode::Down => {
+                    VirtualKeyCode::S => {
                         self.is_backward_pressed = is_pressed;
                         true
                     }
-                    VirtualKeyCode::D | VirtualKeyCode::Right => {
+                    VirtualKeyCode::D => {
                         self.is_right_pressed = is_pressed;
+                        true
+                    }
+                    VirtualKeyCode::Q => {
+                        self.is_prior_pressed = is_pressed;
+                        true
+                    }
+                    VirtualKeyCode::E => {
+                        self.is_next_pressed = is_pressed;
                         true
                     }
                     _ => false,
@@ -310,10 +342,16 @@ impl CameraController {
         } 
 
         if self.is_left_pressed{
-            self.left_count -= dt* self.speed;
+            self.left_count -=dt* self.speed;
         }
         if self.is_right_pressed{
             self.left_count += dt* self.speed;
+        }
+        if self.is_up_pressed{
+            camera.position.y += 3.0 * 1.0 / 2.82842 * ((dt * self.speed) - (dt * self.speed) % 1.0);
+        }
+        if self.is_down_pressed{
+            camera.position.y -= 3.0 * 1.0 / 2.82842 * ((dt * self.speed) - (dt * self.speed) % 1.0);
         }
 
         //pixel glitch fix

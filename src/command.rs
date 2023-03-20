@@ -31,13 +31,14 @@ impl Descriptor{
                     let mut first = [0,0,0];
                     let mut last = [0,0,0];
                     let mut color = [0.0,0.0,0.0,0.0];
+                    let mut id = 0;
                     let delete = false;
 
-                    if v.len() < 11 {
+                    if v.len() < 12 {
                         s = String::from("Insufficient args");
                     }
                     else{
-                        while i < 11{
+                        while i < 12{
 
                             if i >= 1 && i <=3{
                                 first[i-1] = v[i].parse::<i32>().unwrap();
@@ -49,6 +50,10 @@ impl Descriptor{
 
                             if i >= 7 && i <= 10{
                                 color[i-7] = v[i].parse::<f32>().unwrap();
+                            }
+
+                            if i == 11{
+                                id = v[i].parse::<i32>().unwrap();
                             }
 
                             i = i + 1;
@@ -66,10 +71,13 @@ impl Descriptor{
                         + &last[0].to_string()+ &' '.to_string()
                         + &last[1].to_string()+ &' '.to_string()
                         + &last[2].to_string()+ &' '.to_string()
+
+                        + &" ID =".to_owned() 
+                        + &id.to_string()+ &' '.to_string()
                         
                     }
 
-                    state.chunk_manager.place(first, last, color, delete, &state.device, ChunkType::Default, &mut state.iced_state);
+                    state.chunk_manager.place(first, last, color, delete, &state.device, ChunkType::Default,id, &mut state.iced_state);
 
                 }
 
@@ -78,13 +86,14 @@ impl Descriptor{
                     let mut first = [0,0,0];
                     let mut last = [0,0,0];
                     let mut color = [0.0,0.0,0.0,0.0];
+                    let mut id = 0;
                     let delete = true;
 
-                    if v.len() < 11 {
+                    if v.len() < 12 {
                         s = String::from("Insufficient args");
                     }
                     else{
-                        while i < 11{
+                        while i < 12{
 
                             if i >= 1 && i <=3{
                                 first[i-1] = v[i].parse::<i32>().unwrap();
@@ -98,11 +107,16 @@ impl Descriptor{
                                 color[i-7] = v[i].parse::<f32>().unwrap();
                             }
 
+                            if i == 11{
+                                id = v[i].parse::<i32>().unwrap();
+                            }
+
                             i = i + 1;
 
                         }
 
                         s = "Model deleted at ".to_owned() 
+
                         + &first[0].to_string()+ &' '.to_string()
                         + &first[1].to_string()+ &' '.to_string()
                         + &first[2].to_string()+ &' '.to_string()
@@ -112,10 +126,13 @@ impl Descriptor{
                         + &last[0].to_string()+ &' '.to_string()
                         + &last[1].to_string()+ &' '.to_string()
                         + &last[2].to_string()+ &' '.to_string()
+
+                        + &" ID =".to_owned() 
+                        + &id.to_string()+ &' '.to_string()
                         
                     }
 
-                    state.chunk_manager.place(first, last, color, delete, &state.device, ChunkType::Default, &mut state.iced_state);
+                    state.chunk_manager.place(first, last, color, delete, &state.device, ChunkType::Default, id,&mut state.iced_state);
 
                 }
 
@@ -124,12 +141,13 @@ impl Descriptor{
                     let mut first = [0,0,0];
                     let mut last = [0,0,0];
                     let mut color = [0.0,0.0,0.0,0.0];
+                    let mut id = 0;
 
-                    if v.len() < 11 {
+                    if v.len() < 12 {
                         s = String::from("Insufficient args");
                     }
                     else{
-                        while i < 11{
+                        while i < 12{
 
                             if i >= 1 && i <=3{
                                 first[i-1] = v[i].parse::<i32>().unwrap();
@@ -141,6 +159,10 @@ impl Descriptor{
 
                             if i >= 7 && i <= 10{
                                 color[i-7] = v[i].parse::<f32>().unwrap();
+                            }
+
+                            if i == 11{
+                                id = v[i].parse::<i32>().unwrap();
                             }
 
                             i = i + 1;
@@ -159,8 +181,11 @@ impl Descriptor{
                         + &last[1].to_string()+ &' '.to_string()
                         + &last[2].to_string()+ &' '.to_string()
 
+                        + &" ID =".to_owned() 
+                        + &id.to_string()+ &' '.to_string()
+
                     }
-                    state.chunk_manager.draw(first, last, color, &state.device);
+                    state.chunk_manager.draw(first, last, color,id,&state.device);
                 }
                 "/get"=>{
                     s = String::from("");
@@ -204,7 +229,7 @@ impl Descriptor{
                 }
                 
             }
-            state.iced_state.queue_message(ServerLog(s));
+            //state.iced_state.queue_message(ServerLog(s));
         }
         else {
             state.iced_state.queue_message(ChatMessage);

@@ -36,15 +36,6 @@ pub enum Message {
 }
 
 
-#[repr(C)]
-#[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
-struct LightUniform {
-    position: [f32; 3],
-    // Due to uniforms requiring 16 byte (4 float) spacing, we need to use a padding field here
-    _padding: u32,
-    flag: [f32; 3],
-    _padding0: u32,
-}
 
 
 #[repr(C)]
@@ -121,12 +112,24 @@ impl Vertex_tex {
 }
 
 #[derive(Copy, Clone, PartialEq)]
+pub enum VoxelType {
+    Object,
+    Fire,
+    Tree,
+}
+
+#[derive(Copy, Clone, PartialEq)]
 pub struct Instance {
+
     position: cgmath::Vector3<f32>,
     color: cgmath::Vector4<f32>,
     normal: cgmath::Vector3<f32>,
+
     depth_strength:f32,
     normal_strength:f32,
+    light_strength:f32,
+
+    current_type:VoxelType,
 }
 
 // NEW!
@@ -208,6 +211,8 @@ impl InstanceRaw {
 
 pub struct State {
 
+    time:f64,
+
     iced_state: program::State<shell::Controls>,
     clipboard: Clipboard,
     modifiers: ModifiersState,
@@ -245,7 +250,6 @@ pub struct State {
     uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
 
-    light_uniform: LightUniform,
     light_buffer: wgpu::Buffer,
     light_bind_group: wgpu::BindGroup,
     
@@ -397,8 +401,8 @@ impl State {
         ///////////////////////////Camera////////////////////////////
         let camera = camera::Camera {
             eye: (0.0, 0.0, 0.0).into(),
-            position: (0.0, 0.0, 0.0).into(),
             target: (0.0, 0.0, 0.0).into(),
+            position: (0.0, 0.0, 0.0).into(),
             up: cgmath::Vector3::unit_y(),
             forward: cgmath::Vector3::unit_y(),
             aspect: texture_size.width as f32 / texture_size.height as f32,
@@ -410,6 +414,7 @@ impl State {
 
         let camera_controller = camera::CameraController::new(scr_width as f32 , scr_height as f32,300.0,0.002);
         let mut camera_uniform = camera::CameraUniform::new();
+
         camera_uniform.update_view_proj(&camera);
 
         let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -483,49 +488,6 @@ impl State {
             ],
             label: Some("uniform_bind_group"),
         });
-
-
-
-        
-        let light_uniform = LightUniform {
-            position: [150.0, 1000.0, 0.0],
-            _padding: 0,
-            flag: [0.0,1.0,1.0],
-            _padding0: 0,
-        };
-        
-         // We'll want to update our lights position, so we use COPY_DST
-        let light_buffer = device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-                label: Some("Light VB"),
-                contents: bytemuck::cast_slice(&[light_uniform]),
-                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            }
-        );
-        
-        let light_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                },
-                count: None,
-            }],
-            label: None,
-        });
-
-        let light_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &light_bind_group_layout,
-            entries: &[wgpu::BindGroupEntry {
-            binding: 0,
-            resource: light_buffer.as_entire_binding(),
-            }],
-            label: None,
-        });
-
 
         #[cfg(not(target_arch = "wasm32"))]
         let normal_texture = device.create_texture(
@@ -834,9 +796,9 @@ impl State {
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/blend_shader.wgsl").into()),
         });
 
-        let mut sample_ratio = 2.0;
+        let sample_ratio = 1.0;
 
-        let mut vertex_texture: [Vertex_tex;6] = [
+        let vertex_texture: [Vertex_tex;6] = [
 
             Vertex_tex { position: [sample_ratio  + OFFSET_X ,  sample_ratio + OFFSET_Y, 0.0], tex_coords: [1.0 ,0.0] },
             Vertex_tex { position: [sample_ratio  + OFFSET_X , -sample_ratio + OFFSET_Y, 0.0], tex_coords: [1.0 ,1.0] },
@@ -864,6 +826,39 @@ impl State {
 
 
 
+
+        let chunk_manager = chunk::ChunkManager::new(&device);
+        // We'll want to update our lights position, so we use COPY_DST
+        let light_buffer = device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("Light VB"),
+                contents: bytemuck::cast_slice(&chunk_manager.point_light_list),
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            }
+        );
+
+        let light_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            }],
+            label: None,
+        });
+
+        let light_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &light_bind_group_layout,
+            entries: &[wgpu::BindGroupEntry {
+            binding: 0,
+            resource: light_buffer.as_entire_binding(),
+            }],
+            label: None,
+        });
 
 
 
@@ -1172,14 +1167,13 @@ impl State {
                 alpha_to_coverage_enabled: false,
             },
             multiview: None,
-        });
-
-
-        let chunk_manager = chunk::ChunkManager::new(&device);
+        });        
 
         let num_vertices = VERTICES.len() as u32;
 
         Self {
+
+            time:0.0,
 
             iced_state,
             modifiers,
@@ -1219,7 +1213,6 @@ impl State {
             uniform_buffer,
             uniform_bind_group,
 
-            light_uniform,
             light_buffer,
             light_bind_group,
             
@@ -1272,6 +1265,7 @@ impl State {
     }
 
     fn input(&mut self, event: &WindowEvent) -> bool {
+
         self.camera_controller.process_events(event);
         if self.camera_controller.is_cli_pressed && !self.cli_flag{
             self.cli_flag = !self.cli_flag;
@@ -1281,6 +1275,7 @@ impl State {
             self.cli_flag = false;
         }
         true
+
     }
 
 
@@ -1295,6 +1290,8 @@ impl State {
 
 
     fn update(&mut self, dt: std::time::Duration) {
+
+        self.time += dt.as_secs() as f64 + dt.subsec_nanos() as f64 * 1e-9;
 
         self.camera_controller.update_camera(&mut self.camera, dt);
         self.camera_controller.process_mouse_position(self.cursor_position.x, self.cursor_position.y);
@@ -1315,20 +1312,24 @@ impl State {
             bytemuck::cast_slice(&[self.uniform]),
         );
 
-        let old_position: cgmath::Vector3<_> = self.light_uniform.position.into();
 
+        self.chunk_manager.point_light_list[0].position[0] = Rad::sin(Rad(10 as f32)) * 200000.0;
+        self.chunk_manager.point_light_list[0].position[1] = 100000.0;
+        self.chunk_manager.point_light_list[0].position[2] = Rad::cos(Rad(10 as f32)) * 200000.0;
+
+        self.chunk_manager.point_light_list[1].position = [self.camera.target.x,self.camera.target.y,self.camera.target.z];
+
+        let r = ((Rad::sin(Rad(self.time * 10.0)) + 1.0)/2.0 )as f32;
+        let g = ((Rad::sin(Rad(self.time * 10.0) + Rad(3.14 * 2.0 / 3.0)) + 1.0)/2.0 )as f32;
+        let b = ((Rad::sin(Rad(self.time * 10.0) + Rad(3.14 * 4.0 / 3.0)) + 1.0)/2.0 )as f32;
+
+        self.chunk_manager.point_light_list[0].color = [1.0,0.9,0.9,1.0];
+        self.chunk_manager.point_light_list[1].color = [r,g,b,0.0];
         
-        self.light_uniform.position =
-                (cgmath::Quaternion::from_axis_angle((0.0, 1.0, 0.0).into(), cgmath::Deg(1.0))
-                * old_position)
-                .into();
-
-        self.light_uniform.position[1] = 150.0 + 50.0*Rad::sin(Rad(self.light_uniform.position[0] /100.0 as f32));
-        self.queue.write_buffer(&self.light_buffer, 0, bytemuck::cast_slice(&[self.light_uniform]));
 
         self.chunk_manager.update(&self.device,dt,&self.camera,&mut self.camera_controller,self.cursor_position.x,self.cursor_position.y,self.texture_size,&mut self.iced_state,&mut self.sample_ratio);
 
-
+        self.queue.write_buffer(&self.light_buffer, 0, bytemuck::cast_slice(&self.chunk_manager.point_light_list));
         
         //self.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&self.instance_data));
  
@@ -1337,9 +1338,9 @@ impl State {
 
             Vertex_tex { position: [self.sample_ratio  + OFFSET_X ,  self.sample_ratio + OFFSET_Y, 0.0], tex_coords: [1.0 ,0.0] },
             Vertex_tex { position: [self.sample_ratio  + OFFSET_X , -self.sample_ratio + OFFSET_Y, 0.0], tex_coords: [1.0 ,1.0] },
-            Vertex_tex { position: [-self.sample_ratio  +OFFSET_X ,-self.sample_ratio  + OFFSET_Y, 0.0], tex_coords: [0.0 ,1.0] },
-            Vertex_tex { position: [-self.sample_ratio  +OFFSET_X , -self.sample_ratio + OFFSET_Y, 0.0], tex_coords:[0.0 ,1.0] },
-            Vertex_tex { position: [-self.sample_ratio  +OFFSET_X , self.sample_ratio  + OFFSET_Y, 0.0], tex_coords: [0.0 ,0.0] },
+            Vertex_tex { position: [-self.sample_ratio + OFFSET_X ,-self.sample_ratio  + OFFSET_Y, 0.0], tex_coords: [0.0 ,1.0] },
+            Vertex_tex { position: [-self.sample_ratio + OFFSET_X , -self.sample_ratio + OFFSET_Y, 0.0], tex_coords:[0.0 ,1.0] },
+            Vertex_tex { position: [-self.sample_ratio + OFFSET_X , self.sample_ratio  + OFFSET_Y, 0.0], tex_coords: [0.0 ,0.0] },
             Vertex_tex { position: [self.sample_ratio  + OFFSET_X , self.sample_ratio  + OFFSET_Y, 0.0], tex_coords:  [1.0 ,0.0] },
 
         ];
@@ -1854,16 +1855,45 @@ pub async fn run() {
                 if state.framerate_timer<1.0 {
                     state.framerate_timer += dt.as_secs_f32();
                     state.framerate_count += 1;
+
+                    if state.framerate_count % 2 == 0{
+
+                        #[cfg(target_arch = "wasm32")]
+                        {
+                        
+                            use wasm_bindgen::prelude::*;   
+                            use web_sys::console;
+    
+    
+                            #[wasm_bindgen(module = "/tab.js")]
+                            extern "C" {
+                                fn request_lastest_command();
+                                fn get_lastest_command() -> String;
+                            }
+    
+                            request_lastest_command();
+                            let t = get_lastest_command();
+    
+                            if t != "NULL".to_string(){
+                                state.iced_state.queue_message(shell::Message::CommandChanged(t.to_owned()));
+                                state.iced_state.queue_message(shell::Message::Parse);
+                            }  
+    
+    
+                            console::log_1(&t.into()); 
+                        }
+                    }
                 }
                 else {
                     state.iced_state.queue_message(FrameUpdate(state.framerate_count));
+                    
                     state.framerate_timer = 0.0;
                     state.framerate_count = 1;
                 }
                 
                 if state.iced_state.program().parse_flag {
 
-                    let t = &state.iced_state.program().text;
+                    let t = &state.iced_state.program().command_buffer;
                     
                     command_parser.text = t.to_string();
 
@@ -1887,7 +1917,7 @@ pub async fn run() {
                     // All other errors (Outdated, Timeout) should be resolved by the next frame
                     Err(e) => eprintln!("{:?}", e),
                 }
-
+                
                 state.chunk_manager.chunk_list.retain(|c|c.current_type != ChunkType::UsrIndicator);
 
                 window.set_cursor_icon(

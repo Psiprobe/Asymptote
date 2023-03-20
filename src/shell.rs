@@ -2,9 +2,26 @@ use iced_wgpu::Renderer;
 use iced_winit::widget::text_input::{TextInput};
 use iced_winit::widget::{Text,Column,Row, slider};
 use iced_winit::{Alignment, Command, Element, Length, Program, Color,time::Instant};
+use std::{fmt::Write, num::ParseIntError};
 
+pub fn decode_hex(s: &str) -> Result<Vec<u8>, ParseIntError> {
+    (0..s.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&s[i..i + 2], 16))
+        .collect()
+}
+
+pub fn encode_hex(bytes: &[u8]) -> String {
+    let mut s = String::with_capacity(bytes.len() * 2);
+    for &b in bytes {
+        write!(&mut s, "{:02x}", b).unwrap();
+    }
+    s
+}
 
 pub struct TextColumn {
+    pub id: String,
+    pub id_color:[f32;3],
     pub text: String,
     pub timer: f32,
     pub alpha: f32,
@@ -12,11 +29,15 @@ pub struct TextColumn {
 
 impl TextColumn {
     pub fn new(text: String) -> TextColumn{
-        Self { text: text, timer: (3.0) , alpha: (0.7)}
+        Self {id: Default::default(),id_color: Default::default(),text: text, timer: (10.0) , alpha: (0.7)}
+    }
+    pub fn id(&mut self,text: String){
+        self.id = text;
     }
 }
 pub struct Controls {
     pub text: String,
+    pub command_buffer: String,
 
     pub indicator_text: String,
     pub indicator_overdose: bool,
@@ -33,10 +54,12 @@ pub struct Controls {
 #[derive(Debug, Clone)]
 pub enum Message {
     TextChanged(String),
+    CommandChanged(String),
     UsrIndicator(String,bool),
     ServerLog(String),
     FrameUpdate(i32),
     OnSubmit,
+    Parse,
     Update,
     CommandParsed,
     ChatMessage,
@@ -48,6 +71,7 @@ impl Controls {
     pub fn new() -> Controls {
         Controls {
             text: Default::default(),
+            command_buffer: Default::default(),
 
             indicator_text: Default::default(),
             indicator_overdose: Default::default(),
@@ -73,10 +97,38 @@ impl Program for Controls {
 
             Message::TextChanged(text) => {
                 self.text = text;
-                
+            }
+
+            Message::CommandChanged(text) => {
+                self.command_buffer = text;
             }
             
             Message::OnSubmit => {
+
+                #[cfg(target_arch = "wasm32")]
+                {
+                    
+                    use wasm_bindgen::prelude::*;
+                
+                    #[wasm_bindgen(module = "/tab.js")]
+
+                    extern "C" {
+
+                        fn issue_command();
+                        fn set_command_send_buffer(command:String);
+
+                    }
+
+                    let t = &self.text;
+
+                    set_command_send_buffer(t.to_string());
+                    issue_command();
+                }
+
+                self.text = String::from("");
+            }
+
+            Message::Parse => {
                 self.parse_flag = true;
             }
             
@@ -110,11 +162,29 @@ impl Program for Controls {
                 self.text_column.push(TextColumn::new(text));
             }
             Message::CommandParsed => {
-                self.text = String::from("");
+                self.command_buffer = String::from("");
                 self.parse_flag = false;
             }
             Message::ChatMessage =>{
-                self.text_column.push(TextColumn::new(("Admin: ".to_owned() + &self.text).to_string()));
+
+                let s: Vec<&str> = self.command_buffer.split(":").collect();
+
+                let mut text = TextColumn::new((&s[0]).to_string());
+
+                if s.len() > 1{
+                    text = TextColumn::new((&s[1]).to_string());
+                    text.id(s[0].to_owned() + &':'.to_string());
+
+                    let color = decode_hex(s[0]);
+
+                    match color {
+                        Ok(color) => text.id_color = [(color[0] as f32 + 256.0)/512.0,(color[1] as f32 + 256.0)/512.0,(color[2] as f32 + 256.0)/512.0],
+                        Err(error) => panic!("Problem parsing int: {:?}", error),
+                    };
+
+                }
+
+                self.text_column.push(text);
             }
             Message::Coordinate(coordinate) =>{
                 self.test[0] = coordinate[0];
@@ -150,12 +220,14 @@ impl Program for Controls {
 
         let text_columns = Column::with_children(
             self.text_column
-                .iter()
-                .map(|event| Text::new(format!("{}", event.text))
-                .style(Color::new(1.0,1.0,1.0,event.alpha))
-                .size(20))
-                .map(Element::from)
-                .collect(),
+            .iter()
+            .map(|s| 
+                Row::new()
+                .push(Text::new(s.id.to_owned()).style(Color::new(s.id_color[0],s.id_color[1],s.id_color[2],s.alpha)).size(20))
+                .push(Text::new(s.text.to_owned()).style(Color::new(1.0,1.0,1.0,s.alpha)).size(20))
+            )  
+            .map(Element::from)
+            .collect(),
         );
 
         let sliders:Row<'_, _, Renderer> = Row::new()
@@ -190,7 +262,6 @@ impl Program for Controls {
             
             .step(0.01),
         );
-
 
         
         Column::new()
@@ -237,7 +308,9 @@ impl Program for Controls {
             )
 
             .push(text_columns)  
+            
             .into()
+
     }
 }
   

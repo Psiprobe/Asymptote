@@ -54,6 +54,19 @@ fn calc_normal(grad_up:f32,grad_down:f32,grad_left:f32,grad_right:f32,is_horizon
     return normal;
 }
 
+fn calc_depth_diff(vec_1:vec3<f32> , vec_2:vec3<f32>) -> f32{
+
+    let vec_1_diff = vec_1 * 20.0;
+    let vec_1_distance = vec_1_diff.x * 400.0 + vec_1_diff.y * 20.0 + vec_1_diff.z;
+
+    let vec_2_diff = vec_2 * 20.0;
+    let vec_2_distance = vec_2_diff.x * 400.0 + vec_2_diff.y * 20.0 + vec_2_diff.z;
+
+    let diff = abs(vec_1_distance * 30.0- vec_2_distance * 30.0);
+
+    return diff;
+}
+
 
 
 @vertex
@@ -91,9 +104,9 @@ var s_depth: sampler;
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
     var FXAA_ABSOLUTE_LUMA_THRESHOLD = 0.01;
-    var DEPTH_TEST_OFFSET = 0.01;
+    var DEPTH_TEST_OFFSET = 20.0;
 
-    let diffuse = textureSample(t_diffuse, s_diffuse, in.tex_coords);
+    var diffuse = textureSample(t_diffuse, s_diffuse, in.tex_coords);
     let diffuse_left = textureSample(t_diffuse, s_diffuse, in.tex_coords,vec2<i32>(-1,0));
     let diffuse_right = textureSample(t_diffuse, s_diffuse, in.tex_coords,vec2<i32>(1,0));
     let diffuse_up = textureSample(t_diffuse, s_diffuse, in.tex_coords,vec2<i32>(0,1));
@@ -154,45 +167,63 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
     let blend =( diffuse.xyz + tex_data.diffuse_sample.xyz) * 0.5;
 
-    if(depth.x - depth_up.x > DEPTH_TEST_OFFSET||depth.x - depth_down.x > DEPTH_TEST_OFFSET ||depth.x - depth_right.x > DEPTH_TEST_OFFSET|| depth.x - depth_left.x > DEPTH_TEST_OFFSET ){
+    //if(tex_data.contrast > FXAA_ABSOLUTE_LUMA_THRESHOLD){
+    //    diffuse = vec4<f32>(blend.x,blend.y,blend.z,1.0);
+    //}
+
+    let depth_offset_up = calc_depth_diff(depth_up.xyz,depth.xyz);
+    let depth_offset_down = calc_depth_diff(depth_down.xyz,depth.xyz);
+    let depth_offset_left = calc_depth_diff(depth_left.xyz,depth.xyz);
+    let depth_offset_right = calc_depth_diff(depth_right.xyz,depth.xyz);
+
+    
+
+    if(depth_offset_up > DEPTH_TEST_OFFSET||depth_offset_down > DEPTH_TEST_OFFSET ||depth_offset_left > DEPTH_TEST_OFFSET|| depth_offset_right > DEPTH_TEST_OFFSET ){
 
         return vec4<f32>((diffuse.xyz + vec3<f32>(1.0,1.0,1.0))*0.5,1.0);
         //return diffuse;
 
     }
-
-    else if(tex_data.contrast > FXAA_ABSOLUTE_LUMA_THRESHOLD){
-
-        
-        //if (tex_data.is_horizontal){
-        //    if(tex_data.normal.y > 0.0){
-        //        return vec4<f32>(1.0,0.0,0.0,1.0);
-        //    } 
-        //    else{
-        //        return vec4<f32>(0.0,1.0,0.0,1.0);
-        //    }
-        //}else if(tex_data.normal.x > 0.0){
-        //    return vec4<f32>(0.0,0.0,1.0,1.0);
-        //} 
-        //else{
-        //    return vec4<f32>(0.0,0.0,0.0,1.0);
-        //}
-
-        //return vec4<f32>(blend,1.0);
-        return diffuse;
-        
-    }
     else if(normal.x != normal_left.x || normal.y != normal_left.y ||normal.z != normal_left.z){
 
-        return diffuse * 3.0;
+         return vec4<f32>((diffuse.xyz + vec3<f32>(1.0,1.0,1.0))*0.5,1.0);
 
     }
     
     else if(normal.x != normal_down.x|| normal.y != normal_down.y||normal.z != normal_down.z){
 
-        return diffuse * 3.0;
+         return vec4<f32>((diffuse.xyz + vec3<f32>(1.0,1.0,1.0))*0.5,1.0);
 
     }
+    else if(normal.x != normal_right.x|| normal.y != normal_right.y||normal.z != normal_right.z){
+         return vec4<f32>((diffuse.xyz + vec3<f32>(1.0,1.0,1.0))*0.5,1.0);
+
+    }
+    else if(normal.x != normal_up.x|| normal.y != normal_up.y||normal.z != normal_up.z){
+         return vec4<f32>((diffuse.xyz + vec3<f32>(1.0,1.0,1.0))*0.5,1.0);
+
+    }
+
+    //else if(tex_data.contrast > FXAA_ABSOLUTE_LUMA_THRESHOLD){
+//
+    //    
+    //    if (tex_data.is_horizontal){
+    //        if(tex_data.normal.y > 0.0){
+    //            return vec4<f32>(1.0,0.0,0.0,1.0);
+    //        } 
+    //        else{
+    //            return vec4<f32>(0.0,1.0,0.0,1.0);
+    //        }
+    //    }else if(tex_data.normal.x > 0.0){
+    //        return vec4<f32>(0.0,0.0,1.0,1.0);
+    //    } 
+    //    else{
+    //        return vec4<f32>(0.0,0.0,0.0,1.0);
+    //    }
+//
+    //    return vec4<f32>(blend,1.0);
+    //    
+    //}
     
     else {
         return diffuse;
