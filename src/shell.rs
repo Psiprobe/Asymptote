@@ -1,7 +1,7 @@
 use iced_wgpu::Renderer;
 use iced_winit::widget::text_input::{TextInput};
 use iced_winit::widget::{Text,Column,Row, slider};
-use iced_winit::{Alignment, Command, Element, Length, Program, Color,time::Instant};
+use iced_winit::{Alignment, Command, Element, Length, Program, Color};
 use std::{fmt::Write, num::ParseIntError};
 
 pub fn decode_hex(s: &str) -> Result<Vec<u8>, ParseIntError> {
@@ -44,7 +44,7 @@ pub struct Controls {
 
     pub test: [f32;3],
     pub fps: i32,
-    pub last_render_time: Instant,
+
     pub text_column: Vec<TextColumn>,
     pub parse_flag: bool,
 
@@ -71,6 +71,7 @@ impl Controls {
     pub fn new() -> Controls {
         Controls {
             text: Default::default(),
+
             command_buffer: Default::default(),
 
             indicator_text: Default::default(),
@@ -78,7 +79,6 @@ impl Controls {
 
             test: Default::default(),
             fps: 0,
-            last_render_time: Instant::now(),
             text_column: Default::default(),
             parse_flag: false,
 
@@ -270,7 +270,14 @@ impl Program for Controls {
             .align_items(Alignment::Start)
             .padding(20)
             .spacing(5)
-            .push(cli)
+            .push(
+                TextInput::new(
+                ">",
+                text,
+                Message::TextChanged,
+                
+                ).on_submit(Message::OnSubmit)
+            )
             .push(
                 Text::new(&self.indicator_text)
                     .style(

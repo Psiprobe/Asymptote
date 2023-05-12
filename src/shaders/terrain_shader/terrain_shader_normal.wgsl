@@ -14,8 +14,6 @@ var<uniform> light: Light;
 
 struct VertexInput {
     @location(0) position: vec3<f32>,
-    @location(1) color: vec4<f32>,
-    @location(2) normal: vec3<f32>,
 };
 
 struct VertexOutput {
@@ -50,7 +48,7 @@ fn vs_main(
     var out: VertexOutput;
 
     let view = camera.eye - camera.position;
-    let voxel_position = model_matrix *vec4<f32>(model.position, 1.0);
+    let voxel_position = model_matrix * vec4<f32>(model.position, 1.0);
 
     let plane_a = view.x;
     let plane_b = view.y;
@@ -63,12 +61,6 @@ fn vs_main(
     let far = 3750.0;
 
     out.clip_position =  camera.view_proj * model_matrix *vec4<f32>(model.position, 1.0);
-
-    let light_dir = normalize(light.position - (model_matrix *vec4<f32>(model.position, 1.0)).xyz);
-    var diffuse_strength = max(dot(model.normal, light_dir),0.0);
-    let rgb_color = vec3<f32>(model.color[0],model.color[1],model.color[2]);
-    let diffuse_color = rgb_color *  diffuse_strength *  diffuse_strength;
-
     out.color = vec4<f32>((instance.normal[0] + 1.0) / 2.0,(instance.normal[1] + 1.0) / 2.0,(instance.normal[2] + 1.0) / 2.0,1.0);
 
     return out;

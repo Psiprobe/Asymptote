@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"> 
 <head>
+    
     <link rel="stylesheet" type="text/css" href="prj.css">
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -14,14 +15,19 @@
     <source src="src/audio/mixkit-interface-device-click-2577.wav"></source>
 </audio>
 <script>
+
+    var command_list = ''
+    var index;
+
     document.addEventListener('contextmenu', event => event.preventDefault());
-    var screen_width = 800;
-    var screen_height = 600;
+    var screen_width;
+    var screen_height;
 
     function graphic_interface(){
         const Node = document.getElementById("window");
         Node.textContent = '';
         window.init();
+        index = 0;
     }
 
     function PlaySound(soundobj) {
@@ -42,8 +48,10 @@
     <p><button onclick="window.set_screen(2560,1080)" class = "button button1">-- 2560 x 1080 --</button></p>
     <p><button onclick="window.set_screen(1920,1200)" class = "button button1">-- 1920 x 1200 --</button></p>
     <p><button onclick="window.set_screen(1920,1080)" class = "button button1">-- 1920 x 1080 --</button></p>
-    <p><button onclick="window.set_screen(1280,720)" class = "button button1">-- 1280 x 720 --</button></p>
-    <p><button onclick="window.set_screen(800,600)" class = "button button1">-- 800  x 600 --</button></p>
+    <p><button onclick="window.set_screen(1920,1079)" class = "button button1">-- 1920 x 1079 --</button></p>
+    <p><button onclick="window.set_screen(1280,720) " class = "button button1">-- 1280 x 720  --</button></p>
+    <p><button onclick="window.set_screen(800,600)  " class = "button button1">-- 800  x 600  --</button></p>
+    <p><button onclick="window.set_screen(1080,2400)" class = "button button1">-- 1080 x 2400 --</button></p>
     <div id="window">
     </div>
     
@@ -52,7 +60,55 @@
 </html>
 <script type="module">
     import init from "./pkg/prj.js";
-    import { set_height, get_height, set_width, get_width} from "./pkg/snippets/prj-3fbe914b3ae284ad/tab.js";
+    import {
+
+        set_height, 
+        get_height, 
+        set_width, 
+        get_width,
+
+        set_lastest_command,
+        get_command_send_buffer,
+
+    } from "./pkg/snippets/prj-3fbe914b3ae284ad/tab.js";
+
+    document.addEventListener("DOMContentLoaded", event => { 
+
+        document.addEventListener('lastest_command_required', (e) => {
+
+            var txt = command_list.split(/\r?\n/)
+
+            if (index < txt.length){
+                set_lastest_command(txt[index])
+                index++
+            }
+
+            else {
+                set_lastest_command('NULL')
+            }
+
+            console.log(index)
+
+            
+        })
+
+        document.addEventListener('usr_command_issued', (e) => {
+            var txt = get_command_send_buffer()
+            ws.send(txt)
+        })
+
+        var url = 'ws://' + window.location.hostname + ':6142'
+        var ws = new WebSocket(url)
+
+        ws.onmessage = event => {
+
+            var txt = event.data
+            command_list = command_list + txt
+
+        }
+
+    });
+
     window.set_screen= function set_screen(width , height){
         set_width(width);
         set_height(height);

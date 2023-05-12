@@ -19,7 +19,7 @@ use crate::brush_list;
 use crate::model_list;
 
 const RADIUS_CHUNK:i32 = 16;
-const RADIUS_VOXEL:i32 = 128;
+const RADIUS_VOXEL:i32 = 256;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
@@ -73,20 +73,36 @@ pub struct ModelState {
 impl ModelState {
     pub fn update(&mut self){
         match self.id {
-            0 => {
+            0|1|2|3|4|5|6|7|8|9 => {
+                self.name = "NUM".to_string();
+                self.height = RADIUS_VOXEL / self.scale * 2;
+                self.radius = RADIUS_VOXEL / self.scale;
+            }
+            10 => {
                 self.name = "CHESS".to_string();
                 self.height = 1;
                 self.radius = RADIUS_VOXEL / self.scale;
             }
 
-            1 => {
+            11 => {
                 self.name = "PLANE".to_string();
                 self.height = 1;
                 self.radius = RADIUS_VOXEL / self.scale;
             }
 
-            2 => {
+            12 => {
                 self.name = "BLOCK".to_string();
+                self.height = RADIUS_VOXEL / self.scale;
+                self.radius = RADIUS_VOXEL / self.scale;
+            }
+
+            13 => {
+                self.name = "LAWN".to_string();
+                self.height = 20;
+                self.radius = RADIUS_VOXEL / self.scale;
+            }
+            14 => {
+                self.name = "SPHERE".to_string();
                 self.height = RADIUS_VOXEL / self.scale;
                 self.radius = RADIUS_VOXEL / self.scale;
             }
@@ -96,7 +112,7 @@ impl ModelState {
     }
 
     pub fn new() -> Self{
-        Self { id: 0, scale:1,max_id:2,height: 1,radius:Default::default(), name:"CHESS".to_owned(), color: [0.7,0.7,0.7,1.0]}
+        Self { id: 0, scale:1,max_id:14,height: 1,radius:Default::default(), name:"CHESS".to_owned(), color: [0.7,0.7,0.7,1.0]}
     }
 }
 
@@ -168,7 +184,9 @@ impl ChunkManager{
         let mut chunk_list:Vec<Chunk> = Default::default();
         let mut light_vector:Vec<Light> = Default::default();
 
-        for x in 0..512{
+
+
+        for _x in 0..512{
             light_vector.push(
                 Light {
                     position: [0.0, 0.0, 0.0],
@@ -224,8 +242,11 @@ impl ChunkManager{
         }
 
         let mut delete = false;
+        
         let shell_color_config = iced_state.program().color;
         let mut color = [shell_color_config.r,shell_color_config.g,shell_color_config.b,self.w];
+
+        self.point_light_list[0].color = [shell_color_config.r,shell_color_config.g,shell_color_config.b,1.0];
 
         if camera_controller.is_control_pressed{
             delete = true;
@@ -800,14 +821,14 @@ impl ChunkManager{
 
                     self.chunk_list.iter_mut().filter(|c| c.current_type == chunk_type).for_each(|c|{
                         if c.position[0] == xx && c.position[1] == yy && c.position[2] == zz{
-                            c.place(c_first, c_last, color, delete , device, id);
+                            c.place(c_first, c_last,first,last,color, delete , device, id);
                             chunk_modified_flag = true;
                         }
                     });
                     
                     if !chunk_modified_flag{
                         let mut chunk = Chunk::empty(xx, yy, zz, true, device, chunk_type);
-                        chunk.place(c_first, c_last, color, delete, device, id);
+                        chunk.place(c_first, c_last,first,last,color, delete, device, id);
                         self.chunk_list.push(chunk);
                     }
                 }
@@ -886,7 +907,6 @@ impl Chunk{
                             }
                             _ =>{}
                         }
-
                     }
                 }
             }
@@ -905,7 +925,7 @@ impl Chunk{
     }
 
 
-    pub fn place(&mut self,first:[i32;3],last:[i32;3],color:[f32;4],delete:bool,device:&wgpu::Device,id:i32){
+    pub fn place(&mut self,first:[i32;3],last:[i32;3],place_first:[i32;3],place_last:[i32;3],color:[f32;4],delete:bool,device:&wgpu::Device,id:i32){
 
         let len = self.voxel_data.len();
         self.voxel_data
@@ -934,9 +954,9 @@ impl Chunk{
                 for y in first[1] ..last[1] + 1{
                     for z in first[2] ..last[2] + 1{
 
-                        if x == first[0]||x == last[0]||y == first[1]||y == last[1]||z == first[2]||z == last[2]{
+                        
 
-                            let instance = model_list::parse_place(x, y, z, first, last, color, id);
+                            let instance = model_list::parse_place(x, y, z, place_first,place_last, color, id);
 
                             match instance{
                                 Some(ins) => {
@@ -947,7 +967,7 @@ impl Chunk{
                             }
                             
                            
-                        }
+                        
                     }
                 }  
             }

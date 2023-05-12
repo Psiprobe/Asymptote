@@ -18,8 +18,6 @@ var<uniform> lights: Lights;
 
 struct VertexInput {
     @location(0) position: vec3<f32>,
-    @location(1) color: vec4<f32>,
-    @location(2) normal: vec3<f32>,
 };
 
 struct VertexOutput {
@@ -70,52 +68,50 @@ fn vs_main(
     //out.clip_position.z = distance_to_plane;
     //out.clip_position.w = 1.0 / distance_to_plane;
 
-    out.clip_position =  camera.view_proj * model_matrix *vec4<f32>(model.position, 1.0);
+    out.clip_position =  camera.view_proj * model_matrix * vec4<f32>(model.position, 1.0);
    
     var i = 0;
 
     var result:vec3<f32>;
 
-    while i < 512 {
+    while i < 512 && lights.data[i].color.w > 0.0{
 
-        if lights.data[i].color.w > 0.0{
-            let light_dir = normalize(lights.data[i].position - (model_matrix *vec4<f32>(model.position, 1.0)).xyz);
-            let view_dir = normalize(camera.eye - (model_matrix *vec4<f32>(model.position, 1.0)).xyz);
-            let reflect_dir = reflect(-light_dir, instance.normal);
+        
+        let light_dir = normalize(lights.data[i].position - (model_matrix *vec4<f32>(model.position, 1.0)).xyz);
+        let view_dir = normalize(camera.eye - (model_matrix *vec4<f32>(model.position, 1.0)).xyz);
+        let reflect_dir = reflect(-light_dir, instance.normal);
 
-            let ambient_strength = 0.1;
-            var diffuse_strength = max(dot(instance.normal, light_dir),0.0);
-            let specular_strength = 0.5;
+        let ambient_strength = 0.1;
+        var diffuse_strength = max(dot(instance.normal, light_dir),0.0);
+        let specular_strength = 0.5;
 
-            let spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32.0);
+        let spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32.0);
 
-            let distance = length(lights.data[i].position - (model_matrix *vec4<f32>(model.position, 1.0)).xyz);
+        let distance = length(lights.data[i].position - (model_matrix * vec4<f32>(model.position, 1.0)).xyz);
 
-            var attenuation = 1.0 / (1.0 + 0.0014 * distance + 0.000007 * (distance * distance));
+        var attenuation = 1.0 / (1.0 + 0.0014 * distance + 0.000007 * (distance * distance));
 
 
-            if lights.data[i].color.w < 1.0{
-                //point light
+        if lights.data[i].color.w < 1.0{
+            //point light
 
-                attenuation *= lights.data[i].color.w;
+            attenuation *= lights.data[i].color.w;
 
-                let ambient = ambient_strength * lights.data[i].color.xyz* attenuation;
-                let diffuse = diffuse_strength * lights.data[i].color.xyz * attenuation;
-                let specular = specular_strength * spec * lights.data[i].color.xyz * attenuation;
+            let ambient = ambient_strength * lights.data[i].color.xyz* attenuation;
+            let diffuse = diffuse_strength * lights.data[i].color.xyz * attenuation;
+            let specular = specular_strength * spec * lights.data[i].color.xyz * attenuation;
 
-                result = result + (ambient + diffuse + specular) * lights.data[i].color.w * 3.0;
-            }
-            else{
-                //dir light
-                let ambient = ambient_strength * lights.data[i].color.xyz;
-                let diffuse = diffuse_strength * lights.data[i].color.xyz;
-                let specular = specular_strength * spec * lights.data[i].color.xyz;
-
-                result = result + ambient + diffuse;
-                
-            }
+            result = result + (ambient + diffuse + specular) * lights.data[i].color.w;
         }
+        else{
+            //dir light
+            let ambient = ambient_strength * lights.data[i].color.xyz;
+            let diffuse = diffuse_strength * lights.data[i].color.xyz;
+            let specular = specular_strength * spec * lights.data[i].color.xyz;
 
+            result = result + ambient + diffuse;
+            
+        }
         i++;
     }
 

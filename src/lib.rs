@@ -41,15 +41,14 @@ pub enum Message {
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 struct Vertex {
-    position: [f32; 3],
-    color: [f32; 4],
-    normal: [f32; 3],
+    position: [f32; 3]
 }
 
 const VERTICES: &[Vertex] = &[
 
-    Vertex { position: [-0.0,  0.70,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
-    Vertex { position: [-0.0, -0.70,  0.0],        color: [1.0,1.0,1.0 ,1.0],       normal:[0.0, 1.0, 0.0],   },
+    Vertex { position: [0.0,  0.7,  0.0]},
+    Vertex { position: [0.0,  -0.7,  0.0]},
+
     
 ];                  
                     
@@ -63,16 +62,6 @@ impl Vertex {
                 wgpu::VertexAttribute {
                     offset: 0,
                     shader_location: 0,
-                    format: wgpu::VertexFormat::Float32x3,
-                },
-                wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
-                    shader_location: 1,
-                    format: wgpu::VertexFormat::Float32x4,
-                },
-                wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 7]>() as wgpu::BufferAddress,
-                    shader_location: 2,
                     format: wgpu::VertexFormat::Float32x3,
                 },
             ],
@@ -407,8 +396,8 @@ impl State {
             forward: cgmath::Vector3::unit_y(),
             aspect: texture_size.width as f32 / texture_size.height as f32,
             fovy: texture_size.height as f32 / 2.0 as f32,
-            znear: 1000.0,
-            zfar: 5100.0,
+            znear: 0.1,
+            zfar: 10100.0,
             left: cgmath::Vector3::unit_y(),
         };
 
@@ -796,7 +785,7 @@ impl State {
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/blend_shader.wgsl").into()),
         });
 
-        let sample_ratio = 1.0;
+        let sample_ratio = 2.0;
 
         let vertex_texture: [Vertex_tex;6] = [
 
@@ -1313,9 +1302,9 @@ impl State {
         );
 
 
-        self.chunk_manager.point_light_list[0].position[0] = Rad::sin(Rad(10 as f32)) * 200000.0;
+        self.chunk_manager.point_light_list[0].position[0] = Rad::sin(Rad(1.0)) * 200000.0;
         self.chunk_manager.point_light_list[0].position[1] = 100000.0;
-        self.chunk_manager.point_light_list[0].position[2] = Rad::cos(Rad(10 as f32)) * 200000.0;
+        self.chunk_manager.point_light_list[0].position[2] = Rad::cos(Rad(1.0)) * 200000.0;
 
         self.chunk_manager.point_light_list[1].position = [self.camera.target.x,self.camera.target.y,self.camera.target.z];
 
@@ -1323,8 +1312,8 @@ impl State {
         let g = ((Rad::sin(Rad(self.time * 10.0) + Rad(3.14 * 2.0 / 3.0)) + 1.0)/2.0 )as f32;
         let b = ((Rad::sin(Rad(self.time * 10.0) + Rad(3.14 * 4.0 / 3.0)) + 1.0)/2.0 )as f32;
 
-        self.chunk_manager.point_light_list[0].color = [1.0,0.9,0.9,1.0];
-        self.chunk_manager.point_light_list[1].color = [r,g,b,0.0];
+        self.chunk_manager.point_light_list[0].color = [1.0,0.9,0.7,1.0];
+        self.chunk_manager.point_light_list[1].color = [r,g,b,0.1];
         
 
         self.chunk_manager.update(&self.device,dt,&self.camera,&mut self.camera_controller,self.cursor_position.x,self.cursor_position.y,self.texture_size,&mut self.iced_state,&mut self.sample_ratio);
@@ -1746,7 +1735,7 @@ pub async fn run() {
         //use web_sys::console;
         //use winit::platform::web::WindowExtWebSys;
         //let win = web_sys::window().expect("0");
-        //let doc = win.document().expect("0");
+        //let doc = win.document().expect("0");-
         
         match event {
 
@@ -1803,7 +1792,7 @@ pub async fn run() {
                                 },
                             ..
                         } => *control_flow = ControlFlow::Exit,
-
+                                
                         WindowEvent::ModifiersChanged(new_modifiers) => {
                             state.modifiers = *new_modifiers;
                         }

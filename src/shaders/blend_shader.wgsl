@@ -184,25 +184,25 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         //return diffuse;
 
     }
-    else if(normal.x != normal_left.x || normal.y != normal_left.y ||normal.z != normal_left.z){
-
-         return vec4<f32>((diffuse.xyz + vec3<f32>(1.0,1.0,1.0))*0.5,1.0);
-
-    }
-    
-    else if(normal.x != normal_down.x|| normal.y != normal_down.y||normal.z != normal_down.z){
-
-         return vec4<f32>((diffuse.xyz + vec3<f32>(1.0,1.0,1.0))*0.5,1.0);
-
-    }
-    else if(normal.x != normal_right.x|| normal.y != normal_right.y||normal.z != normal_right.z){
-         return vec4<f32>((diffuse.xyz + vec3<f32>(1.0,1.0,1.0))*0.5,1.0);
-
-    }
-    else if(normal.x != normal_up.x|| normal.y != normal_up.y||normal.z != normal_up.z){
-         return vec4<f32>((diffuse.xyz + vec3<f32>(1.0,1.0,1.0))*0.5,1.0);
-
-    }
+    //else if(normal.x != normal_left.x || normal.y != normal_left.y ||normal.z != normal_left.z){
+//
+    //     return vec4<f32>((diffuse.xyz + vec3<f32>(1.0,1.0,1.0))*0.5,1.0);
+//
+    //}
+    //
+    //else if(normal.x != normal_down.x|| normal.y != normal_down.y||normal.z != normal_down.z){
+//
+    //     return vec4<f32>((diffuse.xyz + vec3<f32>(1.0,1.0,1.0))*0.5,1.0);
+//
+    //}
+    //else if(normal.x != normal_right.x|| normal.y != normal_right.y||normal.z != normal_right.z){
+    //     return vec4<f32>((diffuse.xyz + vec3<f32>(1.0,1.0,1.0))*0.5,1.0);
+//
+    //}
+    //else if(normal.x != normal_up.x|| normal.y != normal_up.y||normal.z != normal_up.z){
+    //     return vec4<f32>((diffuse.xyz + vec3<f32>(1.0,1.0,1.0))*0.5,1.0);
+//
+    //}
 
     //else if(tex_data.contrast > FXAA_ABSOLUTE_LUMA_THRESHOLD){
 //
