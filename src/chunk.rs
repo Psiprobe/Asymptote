@@ -97,8 +97,8 @@ impl ModelState {
             }
 
             13 => {
-                self.name = "LAWN".to_string();
-                self.height = 20;
+                self.name = "NOISE".to_string();
+                self.height = 1;
                 self.radius = RADIUS_VOXEL / self.scale;
             }
             14 => {

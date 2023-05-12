@@ -289,7 +289,6 @@ impl CameraController {
     }
 
     pub fn process_mouse_position(&mut self, mouse_pos_x:f64,mouse_pos_y:f64){
-
         
         self.x_offset = mouse_pos_x as f32 - self.scr_width/2.0;
 
@@ -302,6 +301,7 @@ impl CameraController {
            
 
         self.y_offset = mouse_pos_y as f32 - self.scr_height/2.1;
+
             if self.y_offset >= self.scr_height/2.1 {
                 self.scr_edge_flag = true;
             }
@@ -314,7 +314,9 @@ impl CameraController {
                 self.x_offset = 0.0;
                 self.y_offset = 0.0;
             }  
-            self.scr_edge_flag = false;
+
+        self.scr_edge_flag = false;
+
     }
 
     pub fn update_camera(&mut self, camera: &mut Camera ,dt: Duration) {
@@ -332,26 +334,33 @@ impl CameraController {
         camera.forward = Vector3::new(self.pos_x, 0.0, self.pos_z).normalize();
         camera.left = camera.up.cross(camera.forward).normalize();
 
-        
+        let mut camera_smooth_x = 0.0;
+        let mut camera_smooth_y = 0.0;
 
         if self.is_forward_pressed{
             self.forward_count -= dt* self.speed;
+            camera_smooth_y = -3.0;
         } 
         if self.is_backward_pressed{
             self.forward_count += dt* self.speed;
+            camera_smooth_y = 3.0;
         } 
 
         if self.is_left_pressed{
             self.left_count -=dt* self.speed;
+            camera_smooth_x = 10.0;
         }
         if self.is_right_pressed{
             self.left_count += dt* self.speed;
+            camera_smooth_x = -10.0;
         }
         if self.is_up_pressed{
             camera.position.y += 3.0 * 1.0 / 2.82842 * ((dt * self.speed) - (dt * self.speed) % 1.0);
+            camera_smooth_y = -3.0;
         }
         if self.is_down_pressed{
             camera.position.y -= 3.0 * 1.0 / 2.82842 * ((dt * self.speed) - (dt * self.speed) % 1.0);
+            camera_smooth_y = 3.0;
         }
 
         //pixel glitch fix
@@ -365,24 +374,29 @@ impl CameraController {
 
         
         //camera accelerate calulate
+
+        let x_target = self.x_offset / 2.0 + camera_smooth_x;
+        let y_target = self.y_offset * self.aspect / 2.0 + camera_smooth_y;
+
         
-        if  (self.x_offset / 2.0 - self.x_current).abs().sqrt() > 1.0 { //avoid glitching loop
-            if self.x_current < self.x_offset / 2.0{
-                self.x_current += (self.x_offset / 2.0 - self.x_current).sqrt()*dt*50.0;
+        if  (x_target - self.x_current).abs().sqrt() > 1.0 { //avoid glitching loop
+            if self.x_current < x_target{
+                self.x_current += (x_target - self.x_current).sqrt()*dt*50.0;
             }
             else {
-                self.x_current -= (self.x_current - self.x_offset / 2.0).sqrt()*dt*50.0;
+                self.x_current -= (self.x_current - x_target).sqrt()*dt*50.0;
             }
         }
 
-        if (self.y_offset * self.aspect / 2.0 - self.y_current).abs().sqrt() > 1.0 {
+        if (y_target - self.y_current).abs().sqrt() > 1.0 {
 
-            if self.y_current < self.y_offset * self.aspect / 2.0{
-                self.y_current += (self.y_offset * self.aspect / 2.0 - self.y_current).sqrt()*dt*50.0;
+            if self.y_current < y_target{
+                self.y_current += (y_target - self.y_current).sqrt()*dt*50.0;
             }
             else {
-                self.y_current -= (self.y_current - self.y_offset * self.aspect / 2.0).sqrt()*dt*50.0;
+                self.y_current -= (self.y_current - y_target).sqrt()*dt*50.0;
             }
+
         }
 
         //pixel glitch fix

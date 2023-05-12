@@ -13,7 +13,7 @@ pub fn parse_place(x:i32,y:i32,z:i32,first:[i32;3],last:[i32;3],color:[f32;4],id
         0 =>{
 
             let position= cgmath::Vector3 { x:x as f32, y:y as f32, z:z as f32};
-            let color= cgmath::Vector4 {x:1.0,y:0.0,z:0.0,w:1.0};
+            let color= cgmath::Vector4 {x:color[0],y:color[1],z:color[2],w:color[3]};
             let normal = cgmath::Vector3 { x:0.0, y:1.0, z:0.0};
 
             if to_ellipsoid(first, last, [x,y,z]){
@@ -35,7 +35,7 @@ pub fn parse_place(x:i32,y:i32,z:i32,first:[i32;3],last:[i32;3],color:[f32;4],id
         1 => {
 
             let position= cgmath::Vector3 { x:x as f32, y:y as f32, z:z as f32};
-            let color= cgmath::Vector4 {x:1.0,y:0.0,z:0.0,w:1.0};
+            let color= cgmath::Vector4 {x:color[0],y:color[1],z:color[2],w:color[3]};
             let normal = cgmath::Vector3 { x:0.0, y:1.0, z:0.0};
 
             let line_first= [(first[0]+last[0])/2 , first[1],(first[2]+last[2])/2];
@@ -63,7 +63,7 @@ pub fn parse_place(x:i32,y:i32,z:i32,first:[i32;3],last:[i32;3],color:[f32;4],id
         2 => {
 
             let position= cgmath::Vector3 { x:x as f32, y:y as f32, z:z as f32};
-            let color= cgmath::Vector4 {x:1.0,y:0.0,z:0.0,w:1.0};
+            let color= cgmath::Vector4 {x:color[0],y:color[1],z:color[2],w:color[3]};
             let normal = cgmath::Vector3 { x:0.0, y:1.0, z:0.0};
 
             let up_first= [first[0], (first[1] + last[1])/2,first[2]];
@@ -98,7 +98,7 @@ pub fn parse_place(x:i32,y:i32,z:i32,first:[i32;3],last:[i32;3],color:[f32;4],id
         3 => {
 
             let position= cgmath::Vector3 { x:x as f32, y:y as f32, z:z as f32};
-            let color= cgmath::Vector4 {x:1.0,y:0.0,z:0.0,w:1.0};
+            let color= cgmath::Vector4 {x:color[0],y:color[1],z:color[2],w:color[3]};
             let normal = cgmath::Vector3 { x:0.0, y:1.0, z:0.0};
 
             let up_first= [first[0], (first[1] + last[1])/2,first[2]];
@@ -130,7 +130,7 @@ pub fn parse_place(x:i32,y:i32,z:i32,first:[i32;3],last:[i32;3],color:[f32;4],id
         4 => {
 
             let position= cgmath::Vector3 { x:x as f32, y:y as f32, z:z as f32};
-            let color= cgmath::Vector4 {x:1.0,y:0.0,z:0.0,w:1.0};
+            let color= cgmath::Vector4 {x:color[0],y:color[1],z:color[2],w:color[3]};
             let normal = cgmath::Vector3 { x:0.0, y:1.0, z:0.0};
 
             let first_1 =[((first[0]+last[0])/2 + last[0])/2 , first[1],(first[2]+last[2])/2];
@@ -162,7 +162,7 @@ pub fn parse_place(x:i32,y:i32,z:i32,first:[i32;3],last:[i32;3],color:[f32;4],id
         5 =>{
 
             let position= cgmath::Vector3 { x:x as f32, y:y as f32, z:z as f32};
-            let color= cgmath::Vector4 {x:1.0,y:0.0,z:0.0,w:1.0};
+            let color= cgmath::Vector4 {x:color[0],y:color[1],z:color[2],w:color[3]};
             let normal = cgmath::Vector3 { x:0.0, y:1.0, z:0.0};
 
             let first_1 =[first[0] + (last[1] - first[1])/16 , last[1] - 2,(first[2]+last[2])/2];
@@ -202,7 +202,7 @@ pub fn parse_place(x:i32,y:i32,z:i32,first:[i32;3],last:[i32;3],color:[f32;4],id
         6 => {
 
             let position= cgmath::Vector3 { x:x as f32, y:y as f32, z:z as f32};
-            let color= cgmath::Vector4 {x:1.0,y:0.0,z:0.0,w:1.0};
+            let color= cgmath::Vector4 {x:color[0],y:color[1],z:color[2],w:color[3]};
             let normal = cgmath::Vector3 { x:0.0, y:1.0, z:0.0};
             
             let up_first= [first[0], (first[1] + last[1])/2,first[2]];
@@ -236,7 +236,7 @@ pub fn parse_place(x:i32,y:i32,z:i32,first:[i32;3],last:[i32;3],color:[f32;4],id
 
         7 => {
             let position= cgmath::Vector3 { x:x as f32, y:y as f32, z:z as f32};
-            let color= cgmath::Vector4 {x:1.0,y:0.0,z:0.0,w:1.0};
+            let color= cgmath::Vector4 {x:color[0],y:color[1],z:color[2],w:color[3]};
             let normal = cgmath::Vector3 { x:0.0, y:1.0, z:0.0};
 
             let first_1 =[first[0] , last[1] - 2,(first[2]+last[2])/2];
@@ -264,7 +264,7 @@ pub fn parse_place(x:i32,y:i32,z:i32,first:[i32;3],last:[i32;3],color:[f32;4],id
 
         8 => {
             let position= cgmath::Vector3 { x:x as f32, y:y as f32, z:z as f32};
-            let color= cgmath::Vector4 {x:1.0,y:0.0,z:0.0,w:1.0};
+            let color= cgmath::Vector4 {x:color[0],y:color[1],z:color[2],w:color[3]};
             let normal = cgmath::Vector3 { x:0.0, y:1.0, z:0.0};
 
             let up_first= [first[0], (first[1] + last[1])/2,first[2]];
@@ -294,7 +294,7 @@ pub fn parse_place(x:i32,y:i32,z:i32,first:[i32;3],last:[i32;3],color:[f32;4],id
         9 => {
 
             let position= cgmath::Vector3 { x:x as f32, y:y as f32, z:z as f32};
-            let color= cgmath::Vector4 {x:1.0,y:0.0,z:0.0,w:1.0};
+            let color= cgmath::Vector4 {x:color[0],y:color[1],z:color[2],w:color[3]};
             let normal = cgmath::Vector3 { x:0.0, y:1.0, z:0.0};
             
             let up_first= [first[0], (first[1] + last[1])/2,first[2]];
@@ -462,10 +462,10 @@ pub fn parse_place(x:i32,y:i32,z:i32,first:[i32;3],last:[i32;3],color:[f32;4],id
         13 => {
 
             let position= cgmath::Vector3 { x:x as f32, y:y as f32, z:z as f32};
-            let color: cgmath::Vector4<f32>= cgmath::Vector4 {x:0.6,y:1.0,z:0.4,w:1.0};
-            let normal = cgmath::Vector3 { x:0.1 * Rad::sin(Rad(position.z*position.z*position.z*position.x* position.x)), y:1.0, z:0.1 * Rad::sin(Rad(position.z*position.z*position.x*position.x* position.x))};
+            let color= cgmath::Vector4 {x:color[0],y:color[1],z:color[2],w:color[3]};
+            let normal = cgmath::Vector3 { x:0.03 * Rad::sin(Rad(position.z*position.z*position.z*position.x* position.x)), y:1.0, z:0.03 * Rad::sin(Rad(position.z*position.z*position.x*position.x* position.x))};
 
-            if position.y < first[1] as f32 + 3.0 * Rad::sin(Rad(position.z*position.z* position.x* position.x* position.x)) + 3.0{
+            if position.y as i32 == first[1] {
                 Some(Instance {
                     position,
                     color,
