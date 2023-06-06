@@ -91,7 +91,6 @@ fn vs_main(
 
         var attenuation = 1.0 / (1.0 + 0.0014 * distance + 0.000007 * (distance * distance));
 
-
         if lights.data[i].color.w < 1.0{
             //point light
 

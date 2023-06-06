@@ -219,6 +219,7 @@ pub struct State {
     
     render_blend_pipeline: wgpu::RenderPipeline,
     render_sample_pipeline: wgpu::RenderPipeline,
+    render_sample_for_r32Depth_pipeline: wgpu::RenderPipeline,
 
     render_terrain_pipeline: wgpu::RenderPipeline,
     render_terrain_normal_pipeline: wgpu::RenderPipeline,
@@ -516,7 +517,7 @@ impl State {
                 mip_level_count: 1, 
                 sample_count: 1,
                 dimension: wgpu::TextureDimension::D2,
-                format: wgpu::TextureFormat::Bgra8UnormSrgb,
+                format: wgpu::TextureFormat::R32Float,
                 usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::RENDER_ATTACHMENT,
                 label: Some("depth_texture"),
             }
@@ -573,7 +574,7 @@ impl State {
                 mip_level_count: 1, 
                 sample_count: 1,
                 dimension: wgpu::TextureDimension::D2,
-                format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                format: wgpu::TextureFormat::R32Float,
                 usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::RENDER_ATTACHMENT,
                 label: Some("depth_texture"),
             }
@@ -603,7 +604,7 @@ impl State {
                 format: wgpu::TextureFormat::Depth32Float,
                 usage: wgpu::TextureUsages::RENDER_ATTACHMENT
                 | wgpu::TextureUsages::TEXTURE_BINDING,
-                label: Some("depth_texture"),
+                label: Some("depth_test_texture"),
             }
         );
         
@@ -667,6 +668,29 @@ impl State {
             label: Some("texture_bind_group_layout"),
         });
 
+        let texture_bind_group_layout_depth =
+        device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        multisampled: false,
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        sample_type: wgpu::TextureSampleType::Float { filterable: false },
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering),
+                    count: None,
+                },
+            ],
+            label: Some("texture_bind_group_layout"),
+        });
+
         let diffuse_bind_group = device.create_bind_group(
             &wgpu::BindGroupDescriptor {
                 layout: &texture_bind_group_layout,
@@ -703,7 +727,7 @@ impl State {
 
         let depth_bind_group = device.create_bind_group(
             &wgpu::BindGroupDescriptor {
-                layout: &texture_bind_group_layout,
+                layout: &texture_bind_group_layout_depth,
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
@@ -714,7 +738,7 @@ impl State {
                         resource: wgpu::BindingResource::Sampler(&depth_sampler),
                     }
                 ],
-                label: Some("normal_bind_group"),
+                label: Some("depth_bind_group"),
             }
         );
 
@@ -871,7 +895,7 @@ impl State {
                     &uniform_bind_group_layout,
                     &texture_bind_group_layout,
                     &texture_bind_group_layout,
-                    &texture_bind_group_layout,
+                    &texture_bind_group_layout_depth,   //r32test
                 ],
                 push_constant_ranges: &[],
             }
@@ -883,6 +907,17 @@ impl State {
                 bind_group_layouts: &[     
                     &uniform_bind_group_layout,
                     &texture_bind_group_layout,
+                ],
+                push_constant_ranges: &[],
+            }
+        );
+
+        let render_sample_for_r32_depth_pipeline_layout = device.create_pipeline_layout(
+            &wgpu::PipelineLayoutDescriptor {
+                label: Some("Render Pipeline Layout"),
+                bind_group_layouts: &[     
+                    &uniform_bind_group_layout,
+                    &texture_bind_group_layout_depth,
                 ],
                 push_constant_ranges: &[],
             }
@@ -1006,7 +1041,7 @@ impl State {
         });
 
         let render_terrain_depth_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Render_terrain_pipeline"),
+            label: Some("Render_terrain_depth_pipeline"),
             layout: Some(&render_terrain_pipeline_layout),
 
 
@@ -1021,11 +1056,8 @@ impl State {
                 module: &terrain_shader_depth,
                 entry_point: "fs_main",
                 targets: &[Some(wgpu::ColorTargetState {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState {
-                        color: wgpu::BlendComponent::OVER,
-                        alpha: wgpu::BlendComponent::OVER,
-                    }),
+                    format: wgpu::TextureFormat::R32Float,
+                    blend: None,
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
             }),
@@ -1156,7 +1188,51 @@ impl State {
                 alpha_to_coverage_enabled: false,
             },
             multiview: None,
-        });        
+        });      
+
+        let render_sample_for_r32_depth_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+
+            label: Some("Render Texture Pipeline"),
+            layout: Some(&render_sample_for_r32_depth_pipeline_layout),
+
+            vertex: wgpu::VertexState {
+                module: &sample_shader,
+                entry_point: "vs_main",
+                buffers: &[Vertex_tex::desc()],
+            },
+
+            fragment: Some(wgpu::FragmentState {
+                module: &sample_shader,
+                entry_point: "fs_main",
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: config.format,
+                    blend: None,
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+
+
+            primitive: wgpu::PrimitiveState {
+
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                strip_index_format: None,
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: Some(wgpu::Face::Front),
+                polygon_mode: wgpu::PolygonMode::Fill,
+                unclipped_depth: false,
+                conservative: false,
+
+            },
+
+            depth_stencil: None,
+
+            multisample: wgpu::MultisampleState {
+                count: 1,
+                mask: !0,
+                alpha_to_coverage_enabled: false,
+            },
+            multiview: None,
+        });  
 
         let num_vertices = VERTICES.len() as u32;
 
@@ -1182,6 +1258,7 @@ impl State {
             
             render_blend_pipeline,
             render_sample_pipeline,
+            render_sample_for_r32Depth_pipeline: render_sample_for_r32_depth_pipeline,
 
             render_terrain_pipeline,
             render_terrain_normal_pipeline,
@@ -1418,12 +1495,12 @@ impl State {
         let mut depth_encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some("Normal Encoder"),
+                label: Some("Depth Encoder"),
             });
 
         {
             let mut render_pass_depth = depth_encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Normal Render Pass"),
+                label: Some("Depth Render Pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view: &self.depth_texture_view,
                     resolve_target: None,
@@ -1607,7 +1684,7 @@ impl State {
                 render_pass.set_bind_group(1, &self.diffuse_bind_group, &[]);
             }
             else if self.depth_texture_flag {
-                render_pass.set_pipeline(&self.render_sample_pipeline);
+                render_pass.set_pipeline(&self.render_sample_for_r32Depth_pipeline);
                 render_pass.set_bind_group(1, &self.depth_bind_group, &[]);
             }
             

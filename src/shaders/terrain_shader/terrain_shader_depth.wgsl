@@ -64,9 +64,9 @@ fn vs_main(
     let distance_to_plane = abs(plane_a * voxel_position.x + plane_b * voxel_position.y + plane_c * voxel_position.z + plane_d)/ sqrt(plane_a * plane_a + plane_b * plane_b + plane_c * plane_c);
 
     let near = 1300.0;
-    let far = 3750.0;
+    let far = 4500.0;
 
-    out.depth_value = distance_to_plane / 30.0;
+    out.depth_value =(distance_to_plane - near) / (far - near);
 
     return out;
 }
@@ -76,19 +76,13 @@ fn vs_main(
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
-    let r = (in.depth_value  - in.depth_value % 400.0) / 400.0;
-    let g = (in.depth_value - r * 400.0  - (in.depth_value - r * 400.0) % 20.0 ) / 20.0;
-    let b = in.depth_value - r * 400.0 - g * 20.0;
-
-    
-
     //let normalized_depth = in.clip_position.z * in.clip_position.z * 8.333 - 0.13; 
 
     if(in.depth_strength == 0.0){
         return vec4<f32>(1.0,1.0,1.0,1.0);
     }
     else{
-        return vec4<f32>(vec3<f32>(r/20.0,g/20.0,b/20.0),1.0) * (2.0 - 2.0 * in.depth_strength);
+        return vec4<f32>(vec3<f32>(in.depth_value),1.0) * (2.0 - 2.0 * in.depth_strength);
     }
     
 }
